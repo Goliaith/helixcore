@@ -102,6 +102,8 @@ All official changes carry the sign-off.
 - **Safety & Observability** — Loop Safety Registry integration (graceful fallbacks), traces, checkpoints, time-travel, health pulses.
 - **Closed-Loop Self-Improvement** — evaluation harness runs real golden cases against the governance primitives themselves.
 
+See the [Ultimate Stress Test Results](docs/ULTIMATE_STRESS_TEST.md) for a detailed performance comparison against raw Base Grok under the exact abusive load used in the project's internal dogfooding (8 workers, repeated failures, chaos injection). The metrics highlight governance advantages in waste reduction, automatic memory glue, sustained discipline, and bloat control.
+
 All of this is available the moment you `import helixcore`.
 
 ## Quick Usage Example
