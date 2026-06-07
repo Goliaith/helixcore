@@ -129,6 +129,17 @@ except Exception:
     prune_synapses = None
     find_potential_synapses = None
 
+# No-op context for trace (used by rich governance/live_state from live core)
+class _NoopCtx:
+    def __enter__(self): return self
+    def __exit__(self, *a, **k): return False
+
+def _noop(*a, **k): return None
+
+trace_span = _NoopCtx
+emit_span = _noop
+complete_span = _noop
+
 # ------------------------------------------------------------------
 # Paths / configure (Path 2 support)
 # ------------------------------------------------------------------
@@ -513,7 +524,7 @@ __all__ = [
     "record_phase3_usage",
     "get_phase3_adoption_report",
     "get_evaluation_harness",
-    # Full Synaptogenesis traits exposed at orchestrator_mcp level (live core match)
+    # Full Synaptogenesis traits at orchestrator_mcp level (live core parity)
     "perform_synaptogenesis",
     "reinforce_synapse",
     "list_synapses",
