@@ -21,13 +21,18 @@ Core primitives are re-exported at the top level for convenience.
 New ergonomic helpers for live/high-volume work:
     from helixcore import record_simple_decision, quick_milestone, heartbeat
 
-See the documentation in the docs/ folder (especially HELIXCORE_IN_30_MINUTES.md and GETTING_STARTED.md) for full guidance.
+See the documentation in helixcore-packaging/ (especially HELIXCORE_IN_30_MINUTES.md and DOGFOODING.md) for full guidance.
 
 Packaging note (updated 2026-06-07 for public readiness): Added path shim + previous golden_paths relative import fixes.
 This makes "import helixcore" and the main public APIs (begin_governed_work, pulse_agent_health, etc.)
 work reliably whether using the source packaging dir or an installed wheel (addresses the known
 dual-source / orchestrator_mcp split noted in historical audits).
+
+Authorship: This project is by MrSilhouette. The name is locked and immutable (see LICENSE, CONTRIBUTING.md, and README).
 """
+
+__author__ = "MrSilhouette"
+
 
 import sys
 from pathlib import Path as _Path
@@ -165,6 +170,8 @@ __all__ = [
     "restore_checkpoint",
     "generate_local_observability_report",
     "get_evaluation_harness",
+    "generate_local_observability_report",
+    "get_evaluation_harness",
     # Distribution Hygiene (closed-loop feature, now in both facade trees)
     "generate_clean_distributable",
     "synthesize_external_handoff",
@@ -182,6 +189,7 @@ __all__ = [
     # Environment helpers
     "is_standalone_mode",
     "__version__",
+    "__author__",
     # Local stack (full Serena replacement)
     "LocalCodeProvider",
     "get_code_provider",
