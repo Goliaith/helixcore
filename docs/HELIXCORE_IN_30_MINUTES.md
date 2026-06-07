@@ -63,7 +63,7 @@ Then explore the live state that was created under your configured home (or defa
 
 ## What You Just Experienced
 
-You just used the same patterns that survived extreme stress testing, cross-language SRSI studies, and public-readiness hardening — now available as a small, importable Python library.
+You just used the same patterns that were developed and validated through extreme stress testing, cross-language SRSI studies, and public-readiness hardening — all completed in 5 weeks of focused work in June 2026 — now available as a small, importable Python library.
 
 Next steps: read the full [Public Readiness Summary](HelixCore_Public_Readiness_Summary_2026-06-07.md) and the Golden Paths quick reference in this docs folder.
 
