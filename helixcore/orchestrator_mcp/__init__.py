@@ -301,6 +301,51 @@ def quick_milestone(task_slug: str, content: str, **kwargs):
     except Exception:
         return record_phase_handoff(summary=content, task_slug=task_slug, **kwargs)
 
+# LocalProjectMemory helpers (added for top-level re-exports in helixcore/__init__.py)
+# These were missing in the shim, causing ImportError on 'write_local_memory' etc.
+LOCAL_TASKS_DIR = STATE_DIR / "tasks"
+LOCAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
+
+def _local_memory_path(task_slug: str, category: str) -> Path:
+    safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '_', task_slug)
+    cat = category
+    if "/" in cat:
+        cat = cat.split("/")[-1]
+    safe_cat = re.sub(r'[^a-zA-Z0-9_-]', '_', cat)
+    return LOCAL_TASKS_DIR / safe_slug / f"{safe_cat}.json"
+
+def write_local_memory(task_slug: str, category: str, content: str, to_cognee: bool = True) -> bool:
+    """Write project memory locally (primary)."""
+    try:
+        p = _local_memory_path(task_slug, category)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        data = {"content": content, "ts": time.time(), "category": category}
+        p.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        return True
+    except Exception:
+        return False
+
+def read_local_memory(task_slug: str, category: str) -> Optional[str]:
+    """Read project memory from local store (fast, no external dependency)."""
+    try:
+        p = _local_memory_path(task_slug, category)
+        if p.exists():
+            data = json.loads(p.read_text(encoding="utf-8"))
+            return data.get("content")
+    except Exception:
+        pass
+    return None
+
+def list_local_memories(task_slug: str) -> List[str]:
+    """List available memory categories for a task."""
+    try:
+        d = LOCAL_TASKS_DIR / re.sub(r'[^a-zA-Z0-9_-]', '_', task_slug)
+        if d.exists():
+            return [f.stem for f in d.glob("*.json")]
+    except Exception:
+        pass
+    return []
+
 # ------------------------------------------------------------------
 __all__ = [
     "disciplined_orchestration_turn",
@@ -321,6 +366,9 @@ __all__ = [
     "record_simple_decision",
     "heartbeat",
     "quick_milestone",
+    "write_local_memory",
+    "read_local_memory",
+    "list_local_memories",
 ]
 
 # End of full-enough orchestrator_mcp package for public/external use.
