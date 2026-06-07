@@ -70,6 +70,7 @@ persist_decision(
     "build-feature-x-with-claude",
     "Chose recursive descent parser over regex because it handles the edge cases in the spec cleanly.",
     category="implementation"
+)
 
 health = pulse_agent_health()
 print(health.get("registry", "No registry"))   # Friendly standalone output
@@ -104,6 +105,22 @@ graph TD
 
 All of this is available through a small, importable Python package.
 
+## Semantic Memory & Synapse Data (Included)
+
+The package ships with **example semantic memory files and Synapse data** created during the 5-week work (under `examples/semantic/` and `examples/synaptic/`). These demonstrate real usage of LocalSemanticMemory and the Synaptogenesis logic for cross-project memory glue.
+
+After installation you can explore them:
+
+```python
+from helixcore.local_semantic_memory import list_semantic_memories, semantic_search, list_synapses, perform_synaptogenesis
+
+print("Sample semantic memories:", list_semantic_memories("helixcore-memory-coherence-upgrades", limit=2))
+print("Search:", semantic_search("external-dogfood-2026-06-07", "standalone safety", limit=2))
+print("Sample synapses:", list_synapses(limit=3))
+```
+
+The full logic for creating, searching, reinforcing, and pruning semantic memories and synapses is in `helixcore/local_semantic_memory.py` (pure local JSONL, no external services required).
+
 ## External / Public Readiness (2026-06 Hardening)
 
 We explicitly hardened the library for use *outside* any host TUI or grok-build environment:
@@ -122,7 +139,7 @@ See the full [Public Readiness Summary](docs/HelixCore_Public_Readiness_Summary_
 
 ## Installation (No Pre-built Wheel Required)
 
-The repository contains the complete source. You do **not** need a pre-built wheel to install.
+The repository contains the complete source, including semantic memory and Synapse data examples. You do **not** need a pre-built wheel to install.
 
 ### Recommended: Editable install from clone (best for development/experimentation)
 
@@ -226,6 +243,16 @@ for p in list_golden_paths():
 python examples/simple_claude_dogfood.py
 ```
 
+### Explore included semantic and Synapse data
+```bash
+python -c "
+from helixcore.local_semantic_memory import list_semantic_memories, semantic_search, list_synapses
+print('Sample semantic:', list_semantic_memories('helixcore-memory-coherence-upgrades', limit=1))
+print('Search:', semantic_search('external-dogfood-2026-06-07', 'standalone', limit=1))
+print('Synapses:', list_synapses(limit=2))
+"
+```
+
 ### Clean up old isolated state (if using custom HOME)
 ```bash
 rm -rf /tmp/my-helixcore-project/.grok
@@ -242,10 +269,10 @@ helixcore/
 │   ├── golden_paths.py
 │   ├── orchestrator_mcp/     # Core governance engine
 │   ├── local_code_intel.py
-│   ├── local_semantic_memory.py
+│   ├── local_semantic_memory.py  # Semantic files + full Synaptogenesis
 │   └── ...
 ├── docs/                     # All guides + readiness report
-├── examples/                 # Practical usage examples
+├── examples/                 # Practical usage examples + sample semantic/synapse data
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
