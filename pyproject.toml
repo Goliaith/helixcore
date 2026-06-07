@@ -34,4 +34,7 @@ Documentation = "https://github.com/Goliaith/helixcore/tree/main/docs"
 where = ["."]
 
 [tool.setuptools.package-data]
-helixcore = ["**/*.py"]
+"*" = ["**/*"]
+
+[tool.setuptools]
+include-package-data = true
