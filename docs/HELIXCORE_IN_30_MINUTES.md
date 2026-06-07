@@ -6,28 +6,39 @@ This is the fastest practical on-ramp for HelixCore.
 
 ## Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - 15 minutes of focused time
 - (Optional) A small personal project or task you're currently thinking about
 
-## Step 1: Install HelixCore (2 minutes)
+## Step 1: Easy Install (2 minutes)
 
-```bash
-# From this repo
+The most reliable way (especially on Windows with multiple Pythons):
+
+```powershell
+# 1. Clone
 git clone https://github.com/Goliaith/helixcore.git
 cd helixcore
-pip install -e .
 
-# Verify
-python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure; print('HelixCore ready')"
+# 2. Install from the local directory (avoids git+ / launcher issues)
+python -m pip install .
+
+# 3. Verify
+python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
+```
+
+Alternatives (when they work for you):
+- One-liner: `pip install git+https://github.com/Goliaith/helixcore.git`
+- Editable for development: `pip install -e .` after clone
+
+Optional isolation (great for Claude-only or per-project work):
+```powershell
+$env:HELIXCORE_HOME = "C:\tmp\my-helixcore-project"
 ```
 
 ## Step 2: Feel the Patterns (5 minutes)
 
-Run the philosophy demo if present in the repo, or simply execute a tiny governed task:
-
 ```python
-from helixcore import begin_governed_work, record_phase_handoff, persist_decision, pulse_agent_health
+from helixcore import begin_governed_work, record_phase_handoff, persist_decision, pulse_agent_health, get_status_report
 
 result = begin_governed_work(
     task_slug="30-min-demo",
@@ -38,8 +49,7 @@ result = begin_governed_work(
 record_phase_handoff("Step 1 complete", "Step 2: add a decision", "30-min-demo")
 persist_decision("30-min-demo", "This feels much more intentional than raw prompting.")
 
-health = pulse_agent_health()
-print("Health pulse:", health.get("registry", "standalone"))
+print(get_status_report(friendly=True))
 ```
 
 Watch for:
@@ -59,7 +69,7 @@ result = begin_governed_work("my-real-claude-task", "Whatever you're building wi
 record_phase_handoff("...", "...", "my-real-claude-task")
 ```
 
-Then explore the live state that was created under your configured home (or default ~/.grok/state/tasks/my-real-claude-task).
+Then explore the live state that was created under your configured home (or default `~/.grok/state/tasks/my-real-claude-task`).
 
 ## What You Just Experienced
 
