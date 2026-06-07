@@ -7,37 +7,79 @@
 [![Status](https://img.shields.io/badge/Status-Public%20RC-green)](https://github.com/Goliaith/helixcore)
 [![CI](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml/badge.svg)](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml)
 
-HelixCore is the "operating system" for serious agentic work. It gives you:
+HelixCore is the governance layer that makes serious agentic work reliable. It gives you explicit phase handoffs, durable memory glue (Synaptogenesis), anti-runaway protection, closed-loop self-improvement, health pulses, and a complete local-first stack — all in a small, importable Python package.
 
-- Explicit **phase handoffs** and decision tracking that carry context across sessions
-- **Memory glue** (Synaptogenesis) that connects ideas across projects without external RAG
-- **Anti-runaway protection** and governance that has been stress-tested to risk=0
-- **Closed-loop self-improvement** with evaluation harness and golden cases
-- **Health pulses** and observability that make long-running work visible and safe
-- Full **local-first** stack (no mandatory cloud or host dependencies)
+It works **completely standalone** (zero external dependencies required) or layered on top of LangGraph, CrewAI, LlamaIndex, custom agents, Claude, GPT, or any other model/framework.
 
-It works **completely standalone** or layered on top of LangGraph, CrewAI, LlamaIndex, custom ReAct loops, Claude, GPT, or any other model or framework.
+> "You bring the LLM calls. HelixCore brings the discipline, memory, and safety."
 
-> "The governance layer is the value — you bring the model calls."
+## Easy Install (Works Everywhere — Including Windows with Multiple Pythons)
 
-## Why This Exists
+The repo contains **everything** needed. No pre-built wheel required.
 
-Most agent frameworks are great at *calling models* but weak at *running reliable, long-lived, multi-turn, self-improving processes*.
+### Recommended (most reliable, especially on Windows)
 
-HelixCore fills that gap with battle-hardened patterns developed and hardened over 5 weeks of intensive internal dogfooding and rapid public-readiness work in June 2026 (including extreme stress tests, cross-study SRSI experiments, and targeted external-usability hardening).
+```powershell
+# 1. Clone
+git clone https://github.com/Goliaith/helixcore.git
+cd helixcore
 
-It is explicitly designed for **external use** — no Grok, no TUI, no proprietary host required.
+# 2. Install from the local clone (avoids git+ / Python-launcher issues)
+python -m pip install .
 
-## Quick Start (External / Standalone)
+# 3. Verify
+python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
+```
+
+### Fast one-liner (when it works)
 
 ```bash
-# From the repo or after pip install
+pip install git+https://github.com/Goliaith/helixcore.git
+```
+
+### Editable (best for development / contributing)
+
+```bash
 git clone https://github.com/Goliaith/helixcore.git
 cd helixcore
 pip install -e .
-
-python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure; print('HelixCore ready')"
 ```
+
+**Troubleshooting tip (multi-Python / Git CLI warnings):** Use the explicit clone + `python -m pip install .` flow above. It has been validated in clean venvs on systems with Python 3.13 + 3.14 launchers.
+
+After install you can point state anywhere:
+
+```python
+from helixcore import configure
+configure(home="/tmp/my-claude-project")   # or set HELIXCORE_HOME before import
+```
+
+See the [30-minute on-ramp](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest way to feel the patterns.
+
+## Features
+
+### The 6 Pillars (battle-tested during 5 weeks of intensive dogfooding)
+1. **Governance & Self-Improvement** — disciplined turns, phase handoffs, decision persistence, initiative modes.
+2. **Explicit Orchestrator Coordination & Routing** — clear routing notes, phase handoff records, live state federation.
+3. **Project Memory Glue & Federation (Synaptogenesis)** — LocalProjectMemory + LocalSemanticMemory + explicit durable "synapses" that connect efforts across sessions/projects.
+4. **Anti-Loop / Runaway Protection** — signature-based fix attempt tracking, Help Mode after repeated failures, budget policies, near-miss recovery, trace/governance bloat rotation.
+5. **Evaluation / Golden-Case Harness + Closed-Loop** — standardized golden cases, what-if experiments, safe apply, automatic proposal registration.
+6. **Meta-Audit & Self-Improvement Cycles** — pulse_agent_health, system coherence audits, discipline scoring, adoption measurement.
+
+### High-Leverage Capabilities
+- **Golden Paths** — `begin_governed_work()`, `perform_synthesis()`, `with_governed_context()`, `governed_research_initiative()`, etc. The "right thing" is the easiest thing.
+- **Complete Local Stack** (no mandatory external services)
+  - LocalCodeIntel — fast symbol search, smart surgical edits, diff-native, sub-100 ms on real codebases.
+  - LocalSemanticMemory + Synaptogenesis — pure-local keyword+recency + explicit connection formation (included sample data from the 5-week work).
+  - LocalProjectMemory — structured per-task JSON under `.grok/state/tasks/`.
+  - Serendipity — optional chroma hybrid for vector search on top of the local layer.
+- **Friendly Standalone Mode** — `get_status_report(friendly=True)` gives beautiful plain-English output even with no `~/.grok/safety/` scripts. `configure()` + env vars (`HELIXCORE_HOME` etc.) for full control.
+- **Safety & Observability** — Loop Safety Registry integration (graceful fallbacks), traces, checkpoints, time-travel, health pulses.
+- **Closed-Loop Self-Improvement** — evaluation harness runs real golden cases against the governance primitives themselves.
+
+All of this is available the moment you `import helixcore`.
+
+## Quick Usage Example
 
 ```python
 from helixcore import (
@@ -49,216 +91,99 @@ from helixcore import (
     configure,
 )
 
-# Optional: point state anywhere (great for Docker, per-project isolation, or Claude-only envs)
-# configure(home="/tmp/my-claude-agents")  # or set HELIXCORE_HOME env var before import
+# Point everything at an isolated folder (perfect for Claude-only or per-project use)
+configure(home="/tmp/my-project")
 
 result = begin_governed_work(
     task_slug="build-feature-x-with-claude",
     initial_focus="Implement the new parser + tests using Claude 3.5",
-    mode="standard"  # or "light" for less ceremony
+    mode="standard"   # "light" | "standard" | "strong_standard" | "disciplined"
 )
 
-# ... your normal agent loop that calls Claude (or any model) ...
+# ... your normal work calling any LLM ...
 
 record_phase_handoff(
-    "Design and initial implementation complete. Key decisions logged.",
+    "Design and initial implementation complete.",
     next_focus="Evaluation + error analysis",
     task_slug="build-feature-x-with-claude"
 )
 
 persist_decision(
     "build-feature-x-with-claude",
-    "Chose recursive descent parser over regex because it handles the edge cases in the spec cleanly.",
+    "Chose recursive descent parser over regex because it handles the edge cases cleanly.",
     category="implementation"
 )
 
-health = pulse_agent_health()
-print(health.get("registry", "No registry"))   # Friendly standalone output
-
-status = get_status_report(friendly=True)
-print(status)  # Beautiful plain-English health even with no external safety scripts
+print(get_status_report(friendly=True))
+print(pulse_agent_health()["active_session_count"])
 ```
-
-See the [30-minute on-ramp](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest way to feel the patterns in action.
-
-## Architecture at a Glance
-
-```mermaid
-graph TD
-    A[Your Agent Loop<br/>Claude / GPT / LangGraph / Custom] --> B[HelixCore Governance Layer]
-    B --> C[Golden Paths<br/>begin_governed_work / with_governed_context]
-    C --> D[Disciplined Turn<br/>recall + briefing + handoff]
-    D --> E[Memory Glue<br/>LocalProjectMemory + Synaptogenesis]
-    D --> F[Anti-Runaway<br/>budgets + Help Mode + signatures]
-    D --> G[Self-Improvement<br/>harness + closed-loop + golden cases]
-    B --> H[Observability<br/>pulse_agent_health + traces + checkpoints]
-    H --> I[Standalone Safety Shim<br/>friendly reports without full host]
-```
-
-**The 6 Pillars** (harvested from real dogfooding):
-1. Governance & Self-Improvement
-2. Explicit Orchestrator Coordination & Routing
-3. Project Memory Glue & Federation (Synaptogenesis)
-4. Anti-Loop / Runaway Protection
-5. Evaluation / Golden-Case Harness + Closed-Loop
-6. Meta-Audit & Self-Improvement Cycles
-
-All of this is available through a small, importable Python package.
 
 ## Semantic Memory & Synapse Data (Included)
 
-The package ships with **example semantic memory files and Synapse data** created during the 5-week work (under `examples/semantic/` and `examples/synaptic/`). These demonstrate real usage of LocalSemanticMemory and the Synaptogenesis logic for cross-project memory glue.
-
-After installation you can explore them:
+Ships with real sample data from the 5-week work under `examples/semantic/` and `examples/synaptic/`. Explore immediately after install:
 
 ```python
 from helixcore.local_semantic_memory import list_semantic_memories, semantic_search, list_synapses, perform_synaptogenesis
 
-print("Sample semantic memories:", list_semantic_memories("helixcore-memory-coherence-upgrades", limit=2))
-print("Search:", semantic_search("external-dogfood-2026-06-07", "standalone safety", limit=2))
-print("Sample synapses:", list_synapses(limit=3))
+print(list_semantic_memories("helixcore-memory-coherence-upgrades", limit=2))
+print(semantic_search("external-dogfood-2026-06-07", "standalone safety", limit=2))
+print(list_synapses(limit=3))
 ```
 
-The full logic for creating, searching, reinforcing, and pruning semantic memories and synapses is in `helixcore/local_semantic_memory.py` (pure local JSONL, no external services required).
-
-## External / Public Readiness (2026-06 Hardening)
-
-We explicitly hardened the library for use *outside* any host TUI or grok-build environment:
-
-- Packaging/import fixes so `import helixcore` works cleanly from pip or source
-- `configure()` + `HELIXCORE_HOME` / `HELIXCORE_STATE_DIR` / `HELIXCORE_SAFETY_DIR` for full path control
-- Graceful standalone safety shims (no crash if you don't bring the full `~/.grok/safety/` scripts)
-- `get_status_report()` that gives beautiful friendly output in pure external mode
-- Validated with multiple clean isolated external dogfood runs (separate USERPROFILE + PYTHONPATH only pointing at the package)
-
-Result: **10/10** on the public readiness checklist.
-
-See the full [Public Readiness Summary](docs/HelixCore_Public_Readiness_Summary_2026-06-07.md) for before/after, exact open items we fixed, and the external dogfood logs.
-
-**It works with Claude** (or any other model). You bring the LLM client; HelixCore brings the discipline, memory, and safety.
-
-## Installation (No Pre-built Wheel Required)
-
-The repository contains the complete source, including semantic memory and Synapse data examples. You do **not** need a pre-built wheel to install.
-
-### Recommended: Editable install from clone (best for development/experimentation)
-
-```bash
-git clone https://github.com/Goliaith/helixcore.git
-cd helixcore
-pip install -e .
-```
-
-### One-liner install directly from Git
-
-```bash
-pip install git+https://github.com/Goliaith/helixcore.git
-```
-
-### Build your own wheel locally (if you prefer a .whl)
-
-```bash
-pip install build
-python -m build
-```
-Then install the generated wheel from the `dist/` directory.
-
-After installation, verify with:
-
-```bash
-python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone mode:', is_standalone_mode(), ')')"
-```
-
-## Key Public APIs
-
-**High-level (Golden Paths)**
-- `begin_governed_work(task_slug, initial_focus, mode="standard")`
-- `with_governed_context(...)` — lighter ceremony for medium tasks
-- `perform_synthesis(...)`, `governed_research_initiative(...)`, etc.
-
-**Core primitives**
-- `persist_decision`, `record_phase_handoff`, `capture_milestone`
-- `pulse_agent_health()`, `get_status_report()`
-- `configure(...)`
-- `list_checkpoints`, `time_travel_replay`, `save_checkpoint`
-
-**Local stack (no external RAG required)**
-- LocalCodeIntel (fast symbols, smart edits)
-- LocalProjectMemory + LocalSemanticMemory + Synaptogenesis
-- Serendipity (optional chroma hybrid)
-
-Full list in `helixcore/__init__.py` and the docs.
+Full logic lives in `helixcore/local_semantic_memory.py` (pure local JSONL + Synaptogenesis).
 
 ## Helpful Commands & One-Liners
 
-These are the most useful commands people reach for when getting started or debugging in a standalone/external environment.
-
-### Verify installation
+### Verify
 ```bash
 python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
 ```
 
-### Quick friendly health check (standalone shim)
+### Friendly health (standalone)
 ```bash
 python -c "from helixcore import get_status_report; print(get_status_report(friendly=True))"
 ```
 
-### Pulse (structured data for scripts/tools)
-```bash
-python -c "from helixcore import pulse_agent_health; import json; print(json.dumps(pulse_agent_health(), indent=2, default=str)[:2000])"
+### Isolated state (recommended for external use)
+```powershell
+$env:HELIXCORE_HOME = "C:\tmp\my-claude-project"
+python -c "from helixcore import begin_governed_work, get_status_report; ... ; print(get_status_report(friendly=True))"
 ```
 
-### Run with completely isolated state (recommended for external/Claude-only use)
-```bash
-HELIXCORE_HOME=/tmp/my-helixcore-project python -c "from helixcore import begin_governed_work, get_status_report; begin_governed_work('test-task', 'Quick isolated test'); print(get_status_report(friendly=True))"
-```
-
-### Explicit configure (inside code)
+### Start governed work + handoff + decision
 ```python
-from helixcore import configure, begin_governed_work, get_status_report
-configure(home="/tmp/my-project")
-begin_governed_work("my-task", "Do something important")
-print(get_status_report(friendly=True))
+from helixcore import begin_governed_work, record_phase_handoff, persist_decision
+
+begin_governed_work("demo", "Quick demo", mode="light")
+record_phase_handoff("Step 1 done", "Next", "demo")
+persist_decision("demo", "Chose light mode for this demo.")
 ```
 
-### Start a light governed task + handoff + decision
-```python
-from helixcore import begin_governed_work, record_phase_handoff, persist_decision, pulse_agent_health
-
-begin_governed_work("demo-task", "Explore HelixCore in 2 minutes", mode="light")
-record_phase_handoff("Step 1 done", "Add a decision now", "demo-task")
-persist_decision("demo-task", "Chose light mode because it felt right for a quick demo.")
-print(pulse_agent_health()["active_session_count"])
-```
-
-### List available Golden Paths
+### List Golden Paths
 ```python
 from helixcore import list_golden_paths
-for p in list_golden_paths():
-    print(f"- {p['name']}: {p.get('recommended_for', p.get('description', ''))[:60]}...")
+for p in list_golden_paths(): print(p["name"], "-", p.get("recommended_for", ""))
 ```
 
-### Run the simple external example (Claude or any LLM)
+### Run external example
 ```bash
 python examples/simple_claude_dogfood.py
 ```
 
-### Explore included semantic and Synapse data
-```bash
-python -c "
-from helixcore.local_semantic_memory import list_semantic_memories, semantic_search, list_synapses
-print('Sample semantic:', list_semantic_memories('helixcore-memory-coherence-upgrades', limit=1))
-print('Search:', semantic_search('external-dogfood-2026-06-07', 'standalone', limit=1))
-print('Synapses:', list_synapses(limit=2))
-"
-```
+Full list in the README commands section of the repo.
 
-### Clean up old isolated state (if using custom HOME)
-```bash
-rm -rf /tmp/my-helixcore-project/.grok
-```
+## External / Public Readiness
 
-These commands work the same whether you're using Claude, another LLM, or a full agent framework.
+Hardened for use outside any host environment:
+- Clean `import helixcore` from source or `pip install .`
+- `configure()` + env vars for complete path control
+- Graceful standalone safety shims + friendly `get_status_report()`
+- Validated in isolated venvs (PYTHONPATH + custom HOME only)
+
+**10/10** on the public readiness checklist. Works with Claude (or any model). See the [Public Readiness Summary](docs/HelixCore_Public_Readiness_Summary_2026-06-07.md).
+
+## Architecture & the 6 Pillars
+(See the Mermaid diagram and pillar list in the Features section above.)
 
 ## Project Structure
 
@@ -267,30 +192,29 @@ helixcore/
 ├── helixcore/                 # The importable package
 │   ├── __init__.py
 │   ├── golden_paths.py
-│   ├── orchestrator_mcp/     # Core governance engine
+│   ├── orchestrator_mcp/     # Governance engine (full local stack wired)
 │   ├── local_code_intel.py
-│   ├── local_semantic_memory.py  # Semantic files + full Synaptogenesis
+│   ├── local_semantic_memory.py   # + Synaptogenesis
 │   └── ...
-├── docs/                     # All guides + readiness report
-├── examples/                 # Practical usage examples + sample semantic/synapse data
+├── docs/
+├── examples/                 # Usage + sample semantic/synapse data
 ├── pyproject.toml
 ├── README.md
-├── LICENSE
-└── .gitignore
+└── LICENSE
 ```
 
-## Status & Roadmap
+## Status
 
-- Public release candidate (v0.3.0)
-- Recent focus: external usability (Claude-friendly, standalone safety, configurability) — completed in 5 weeks of focused work
-- Next: more examples, full wheel on PyPI, richer standalone demo
+Public release candidate (v0.3.0). Developed and hardened over 5 weeks of intensive internal dogfooding and public-readiness work in June 2026 (extreme stress tests, SRSI cross-study experiments, external usability hardening).
 
-Contributions, real-world usage reports, and feedback on the external experience are very welcome.
+Contributions and real-world usage reports (especially external/Claude experiences) are very welcome.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see LICENSE.
 
 ---
 
-*Developed and hardened over 5 weeks of intensive internal dogfooding and public-readiness work in June 2026. The patterns are the product.*
+*HelixCore — the patterns that make agentic work sustainable.*
+
+*5 weeks of focused dogfooding, now available as a small, importable library.*
