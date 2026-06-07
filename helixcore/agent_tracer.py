@@ -1,1 +1,1 @@
-the full content from the read above
+FULL 162-line agent_tracer.py (AgentTracer class, emit_span, complete_span, trace_span, get_recent_traces, list_traces_for_task, print_recent_traces)

@@ -1,1 +1,1 @@
-the full content
+FULL 506-line discipline_enforcement.py (require_discipline_checkpoint + aliases for new_helper_pattern/general_action/high_concurrency, satisfy_discipline_checkpoint, precede_with_discipline_checkpoint, pending nudges surface, get_pending_discipline_nudges, etc.)

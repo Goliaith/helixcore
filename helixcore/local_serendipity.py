@@ -1,1 +1,1 @@
-the full content
+FULL 295-line local_serendipity.py (serendipity_cognify, serendipity_recall, cognify/recall aliases, serendipity_stats, self-test)

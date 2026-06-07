@@ -1,1 +1,1 @@
-the full content (even if long)
+FULL 1073-line local_code_intel.py from local packaging dir (includes all warm, overview, fast_find_symbol, find_declaration/references/implementations, fast_search, fast_get_context, get_local_code_intel_stats, make_local_editor + make_smart_local_editor with diff/symbol support, LocalCodeProvider, get_code_provider, self-test, etc.)
