@@ -1,1 +1,1 @@
-full
+FULL from local read (529 lines, ends with __all__)
