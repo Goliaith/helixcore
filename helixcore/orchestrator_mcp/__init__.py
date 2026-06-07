@@ -6,6 +6,11 @@ Complete implementation pulled from the local authoritative source so that
 'from .orchestrator_mcp import disciplined_orchestration_turn' (and the other names
 used by golden_paths.py) succeeds, and 'import helixcore' + begin_governed_work
 work after a clean `pip install .` from the GitHub tree.
+
+NOTE (2026-06 fix): This version now includes the automatic Synaptogenesis
+wiring (the missing piece in earlier public shims). persist_decision and
+strong-mode disciplined_orchestration_turn now auto-form/reinforce synapses
+for memory glue, exactly as in the full internal source.
 """
 
 from __future__ import annotations
@@ -99,6 +104,24 @@ from .nudges import (
     _score_recommendation,
 )
 
+# Synaptogenesis automatic wiring (restored for public package)
+# This was the piece missing in earlier public shims. The full local source
+# automatically forms/reinforces synapses on decisions, handoffs, and strong turns.
+try:
+    from ..local_semantic_memory import (
+        perform_synaptogenesis,
+        reinforce_synapse,
+        list_synapses,
+        write_synapse,
+    )
+    SYNAPTOGENESIS_AVAILABLE = True
+except Exception:
+    SYNAPTOGENESIS_AVAILABLE = False
+    perform_synaptogenesis = None
+    reinforce_synapse = None
+    list_synapses = None
+    write_synapse = None
+
 # ------------------------------------------------------------------
 # Paths / configure (Path 2 support)
 # ------------------------------------------------------------------
@@ -162,6 +185,9 @@ def disciplined_orchestration_turn(
     """
     One-call helper that performs the ideal "start of turn" actions.
     Strong Middle (strong_standard) is the default for public / external use.
+
+    Now includes automatic Synaptogenesis (restored): on strong_standard/disciplined
+    modes we auto-grow the synapse graph at the start of the turn.
     """
     if mode not in ORCHESTRATION_MODES:
         mode = DEFAULT_ORCHESTRATION_MODE
@@ -192,6 +218,16 @@ def disciplined_orchestration_turn(
     if mode in ("strong_standard", "disciplined"):
         recs.append("Use record_phase_handoff() and persist_decision() for long-running work.")
         recs.append("Consider perform_synthesis() when you have several related efforts.")
+
+    # Automatic Synaptogenesis (the behavior that was missing in the public shim)
+    # For strong modes, auto-grow the synapse graph at the start of the turn.
+    if mode in ("strong_standard", "disciplined") and SYNAPTOGENESIS_AVAILABLE and perform_synaptogenesis is not None:
+        try:
+            syn_res = perform_synaptogenesis(task_slug, max_new=1)
+            if syn_res.get("new_synapses", 0) > 0:
+                recs.append(f"Synaptogenesis auto: formed {syn_res['new_synapses']} new connection(s) this turn for memory graph growth.")
+        except Exception:
+            pass
 
     result: Dict[str, Any] = {
         "task_slug": task_slug,
@@ -320,6 +356,16 @@ def write_local_memory(task_slug: str, category: str, content: str, to_cognee: b
         p.parent.mkdir(parents=True, exist_ok=True)
         data = {"content": content, "ts": time.time(), "category": category}
         p.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+        # Automatic Synaptogenesis after decision (the behavior users expect and that
+        # was missing in the earlier public shim). This grows the memory graph
+        # automatically on every persist.
+        if SYNAPTOGENESIS_AVAILABLE and perform_synaptogenesis is not None:
+            try:
+                perform_synaptogenesis(task_slug, max_new=1)
+            except Exception:
+                pass
+
         return True
     except Exception:
         return False
@@ -464,3 +510,4 @@ __all__ = [
 
 # End of full-enough orchestrator_mcp package for public/external use.
 # The complete detailed logic (including every Phase 3 primitive, full anti-runaway, evaluation harness wiring, etc.) lives in the source tree used to build this package.
+# Automatic Synaptogenesis is now wired into the key public entry points.
