@@ -31,6 +31,8 @@ It is explicitly designed for **external use** — no Grok, no TUI, no proprieta
 
 ```bash
 # From the repo or after pip install
+git clone https://github.com/Goliaith/helixcore.git
+cd helixcore
 pip install -e .
 
 python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure; print('HelixCore ready')"
@@ -118,16 +120,36 @@ See the full [Public Readiness Summary](docs/HelixCore_Public_Readiness_Summary_
 
 **It works with Claude** (or any other model). You bring the LLM client; HelixCore brings the discipline, memory, and safety.
 
-## Installation
+## Installation (No Pre-built Wheel Required)
+
+The repository contains the complete source. You do **not** need a pre-built wheel to install.
+
+### Recommended: Editable install from clone (best for development/experimentation)
 
 ```bash
-# Editable from this repo (recommended for development)
 git clone https://github.com/Goliaith/helixcore.git
 cd helixcore
 pip install -e .
+```
 
-# Or from a wheel once published
-pip install helixcore
+### One-liner install directly from Git
+
+```bash
+pip install git+https://github.com/Goliaith/helixcore.git
+```
+
+### Build your own wheel locally (if you prefer a .whl)
+
+```bash
+pip install build
+python -m build
+```
+Then install the generated wheel from the `dist/` directory.
+
+After installation, verify with:
+
+```bash
+python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone mode:', is_standalone_mode(), ')')"
 ```
 
 ## Key Public APIs
