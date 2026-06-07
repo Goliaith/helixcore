@@ -23,7 +23,7 @@ It works **completely standalone** or layered on top of LangGraph, CrewAI, Llama
 
 Most agent frameworks are great at *calling models* but weak at *running reliable, long-lived, multi-turn, self-improving processes*.
 
-HelixCore fills that gap with battle-hardened patterns extracted from years of internal dogfooding (including extreme stress tests, cross-study SRSI experiments, and public-readiness hardening in 2026).
+HelixCore fills that gap with battle-hardened patterns developed and hardened over 5 weeks of intensive internal dogfooding and rapid public-readiness work in June 2026 (including extreme stress tests, cross-study SRSI experiments, and targeted external-usability hardening).
 
 It is explicitly designed for **external use** — no Grok, no TUI, no proprietary host required.
 
@@ -171,7 +171,7 @@ helixcore/
 ## Status & Roadmap
 
 - Public release candidate (v0.3.0)
-- Recent focus: external usability (Claude-friendly, standalone safety, configurability)
+- Recent focus: external usability (Claude-friendly, standalone safety, configurability) — completed in 5 weeks of focused work
 - Next: more examples, full wheel on PyPI, richer standalone demo
 
 Contributions, real-world usage reports, and feedback on the external experience are very welcome.
@@ -182,4 +182,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-*Built from years of internal dogfooding and explicitly extracted for public use. The patterns are the product.*
+*Developed and hardened over 5 weeks of intensive internal dogfooding and public-readiness work in June 2026. The patterns are the product.*
