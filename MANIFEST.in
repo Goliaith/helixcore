@@ -3,6 +3,8 @@ include LICENSE
 include pyproject.toml
 recursive-include docs *.md
 recursive-include examples *.py
+recursive-include examples/semantic *
+recursive-include examples/synaptic *
 recursive-include helixcore *.py
 
 global-exclude __pycache__
