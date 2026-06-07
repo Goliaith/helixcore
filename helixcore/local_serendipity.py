@@ -1,12 +1,13 @@
-"" 
-Serendipity — Cognify helper / chroma hybrid for semantic memory.
+# -*- coding: utf-8 -*-
+"""
+Serendipity - Cognify helper / chroma hybrid for semantic memory.
 
 "Serendipity" provides happy, accidental discovery through hybrid local + vector search.
 
 - Always feeds to LocalSemanticMemory (pure local keyword + recency, zero deps).
 - For chroma hybrid: provides ready-to-use tool call specifications for the chroma MCP
   (create_collection + add_documents for cognify; query_documents for recall).
-- Task-scoped collections by default: f"serendipity_{safe_task_slug}"
+- Task-scoped collections by default: f"serendipity_{_safe_slug(task_slug)}"
 - Supports custom collection names, embedding functions (default, ollama, openai, etc.),
   metadata, chunking hints.
 - Hybrid recall: combines local semantic_search results + chroma query spec.
