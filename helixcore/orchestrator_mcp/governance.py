@@ -4,6 +4,8 @@ Governance primitives extracted from orchestrator_mcp (recommended split).
 Includes: disciplined_recall, synthesize_project_context_briefing, persist_decision, capture_milestone, transition_phase.
 Uses runtime _om hack for cross names (record_discipline_event, get_live_*, persist calls inside, etc.).
 Re-exported by __init__.py.
+
+Robust trace handling for published shim compatibility.
 """
 
 from __future__ import annotations
@@ -48,7 +50,24 @@ def _complete_span(*a, **k):
 
 def _trace_span(*a, **k):
     om = _om()
+    if om and hasattr(om, "trace_span"):
+        try:
+            return om.trace_span(*a, **k)
+        except Exception:
+            pass
+    # Fallback no-op context manager (for published shim compatibility)
+    class _Noop:
+        def __enter__(self): return self
+        def __exit__(self, *a, **k): return False
+    return _Noop()
+
+def _trace_span(*a, **k):
+    om = _om()
     if om and hasattr(om, "trace_span"): return om.trace_span(*a, **k)
+    class _Noop:
+        def __enter__(self): return self
+        def __exit__(self, *a, **k): return False
+    return _Noop()
 
 def _get_related_efforts(*a, **k):
     om = _om()
@@ -396,7 +415,14 @@ def persist_decision(
     """
     _record_discipline_event("persist_decision", {"decision": decision[:80]}, task_slug=task_slug)
 
-    with _trace_span("persist_decision", {"category": category, "decision_preview": decision[:80]}, task_slug=task_slug):
+    # Robust trace (works with shim no-op or full)
+    _tr = _trace_span("persist_decision", {"category": category, "decision_preview": decision[:80]}, task_slug=task_slug)
+    if _tr is None:
+        class _Noop:
+            def __enter__(self): return self
+            def __exit__(self, *a, **k): return False
+        _tr = _Noop()
+    with _tr:
         messages = []
 
         if _write_local_memory(task_slug, category, decision, to_cognee=False):
