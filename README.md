@@ -150,6 +150,67 @@ pip install helixcore
 
 Full list in `helixcore/__init__.py` and the docs.
 
+## Helpful Commands & One-Liners
+
+These are the most useful commands people reach for when getting started or debugging in a standalone/external environment.
+
+### Verify installation
+```bash
+python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
+```
+
+### Quick friendly health check (standalone shim)
+```bash
+python -c "from helixcore import get_status_report; print(get_status_report(friendly=True))"
+```
+
+### Pulse (structured data for scripts/tools)
+```bash
+python -c "from helixcore import pulse_agent_health; import json; print(json.dumps(pulse_agent_health(), indent=2, default=str)[:2000])"
+```
+
+### Run with completely isolated state (recommended for external/Claude-only use)
+```bash
+HELIXCORE_HOME=/tmp/my-helixcore-project python -c "from helixcore import begin_governed_work, get_status_report; begin_governed_work('test-task', 'Quick isolated test'); print(get_status_report(friendly=True))"
+```
+
+### Explicit configure (inside code)
+```python
+from helixcore import configure, begin_governed_work, get_status_report
+configure(home="/tmp/my-project")
+begin_governed_work("my-task", "Do something important")
+print(get_status_report(friendly=True))
+```
+
+### Start a light governed task + handoff + decision
+```python
+from helixcore import begin_governed_work, record_phase_handoff, persist_decision, pulse_agent_health
+
+begin_governed_work("demo-task", "Explore HelixCore in 2 minutes", mode="light")
+record_phase_handoff("Step 1 done", "Add a decision now", "demo-task")
+persist_decision("demo-task", "Chose light mode because it felt right for a quick demo.")
+print(pulse_agent_health()["active_session_count"])
+```
+
+### List available Golden Paths
+```python
+from helixcore import list_golden_paths
+for p in list_golden_paths():
+    print(f"- {p['name']}: {p.get('recommended_for', p.get('description', ''))[:60]}...")
+```
+
+### Run the simple external example (Claude or any LLM)
+```bash
+python examples/simple_claude_dogfood.py
+```
+
+### Clean up old isolated state (if using custom HOME)
+```bash
+rm -rf /tmp/my-helixcore-project/.grok
+```
+
+These commands work the same whether you're using Claude, another LLM, or a full agent framework.
+
 ## Project Structure
 
 ```
@@ -160,8 +221,9 @@ helixcore/
 │   ├── orchestrator_mcp/     # Core governance engine
 │   ├── local_code_intel.py
 │   ├── local_semantic_memory.py
-│   ├── ...
+│   └── ...
 ├── docs/                     # All guides + readiness report
+├── examples/                 # Practical usage examples
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
