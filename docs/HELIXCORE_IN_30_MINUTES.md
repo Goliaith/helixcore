@@ -1,5 +1,3 @@
-**Full content from local docs/HELIXCORE_IN_30_MINUTES.md to be uploaded in batch. Placeholder for structure.**
-
 # HelixCore in 30 Minutes
 
 **Goal**: Get a new external Python developer from zero to applying governed patterns on a small real task in about 30 minutes.
@@ -15,41 +13,60 @@ This is the fastest practical on-ramp for HelixCore.
 ## Step 1: Install HelixCore (2 minutes)
 
 ```bash
-# Clone or download the helixcore-packaging directory, then:
-cd helixcore-packaging
+# From this repo
+git clone https://github.com/Goliaith/helixcore.git
+cd helixcore
 pip install -e .
+
+# Verify
+python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure; print('HelixCore ready')"
 ```
 
-Verify it works:
+## Step 2: Feel the Patterns (5 minutes)
+
+Run the philosophy demo if present in the repo, or simply execute a tiny governed task:
 
 ```python
-python -c "from helixcore import begin_governed_work, capture_milestone, serendipity_cognify, serendipity_recall; print('HelixCore ready (LocalCodeIntel + LocalProjectMemory + LocalSemanticMemory + Serendipity)')"
-```
+from helixcore import begin_governed_work, record_phase_handoff, persist_decision, pulse_agent_health
 
-## Step 2: Run the Standalone Demo (5 minutes)
+result = begin_governed_work(
+    task_slug="30-min-demo",
+    initial_focus="Explore what governed agentic work feels like",
+    mode="light"
+)
 
-This shows you what governed work *feels* like.
+record_phase_handoff("Step 1 complete", "Step 2: add a decision", "30-min-demo")
+persist_decision("30-min-demo", "This feels much more intentional than raw prompting.")
 
-```bash
-cd helixcore-packaging
-python standalone_playground/demo.py
+health = pulse_agent_health()
+print("Health pulse:", health.get("registry", "standalone"))
 ```
 
 Watch for:
-- Explicit phases
-- Decisions with rationale
-- Phase handoffs carrying context forward
-- The final artifacts it produces
+- The system remembering context across turns
+- Explicit handoffs that become durable memory
+- The friendly pulse output even in pure standalone mode
 
-This is the best 5-minute demonstration of why these patterns matter.
+## Step 3: Use It on Real Work (the rest of the 30 minutes)
 
-## Step 3: Explore the Flagship Example (8 minutes)
+Pick one of your actual tasks and wrap it:
 
-This is the recommended starting template for real work.
+```python
+result = begin_governed_work("my-real-claude-task", "Whatever you're building with Claude or another model")
 
-```bash
-cd helixcore-packaging/examples/governed_research_synthesis
-python main.py
+# ... do the work, calling your LLM as usual ...
+
+record_phase_handoff("...", "...", "my-real-claude-task")
 ```
 
-(Full guide content from source docs to be populated.)
+Then explore the live state that was created under your configured home (or default ~/.grok/state/tasks/my-real-claude-task).
+
+## What You Just Experienced
+
+You just used the same patterns that survived extreme stress testing, cross-language SRSI studies, and public-readiness hardening — now available as a small, importable Python library.
+
+Next steps: read the full [Public Readiness Summary](HelixCore_Public_Readiness_Summary_2026-06-07.md) and the Golden Paths quick reference in this docs folder.
+
+---
+
+*This guide is intentionally lightweight so you can feel the value quickly. The depth is in the actual patterns and the local memory glue.*
