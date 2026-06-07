@@ -11,6 +11,10 @@ NOTE (2026-06 fix): This version now includes the automatic Synaptogenesis
 wiring (the missing piece in earlier public shims). persist_decision and
 strong-mode disciplined_orchestration_turn now auto-form/reinforce synapses
 for memory glue, exactly as in the full internal source.
+
+Updated 2026-06: All Synaptogenesis traits now exposed at orchestrator_mcp level
+(perform_synaptogenesis, write_synapse, list_synapses, reinforce_synapse,
+prune_synapses, find_potential_synapses) + deeper auto in governance/live_state.
 """
 
 from __future__ import annotations
@@ -104,15 +108,16 @@ from .nudges import (
     _score_recommendation,
 )
 
-# Synaptogenesis automatic wiring (restored for public package)
-# This was the piece missing in earlier public shims. The full local source
-# automatically forms/reinforces synapses on decisions, handoffs, and strong turns.
+# Synaptogenesis automatic wiring (full live core parity at orchestrator_mcp level)
+# All 6 traits now imported and re-exported so `from helixcore.orchestrator_mcp import prune_synapses, find_potential_synapses, ...` works.
 try:
     from ..local_semantic_memory import (
         perform_synaptogenesis,
         reinforce_synapse,
         list_synapses,
         write_synapse,
+        prune_synapses,
+        find_potential_synapses,
     )
     SYNAPTOGENESIS_AVAILABLE = True
 except Exception:
@@ -121,6 +126,8 @@ except Exception:
     reinforce_synapse = None
     list_synapses = None
     write_synapse = None
+    prune_synapses = None
+    find_potential_synapses = None
 
 # ------------------------------------------------------------------
 # Paths / configure (Path 2 support)
@@ -506,8 +513,14 @@ __all__ = [
     "record_phase3_usage",
     "get_phase3_adoption_report",
     "get_evaluation_harness",
+    # Full Synaptogenesis traits exposed at orchestrator_mcp level (live core match)
+    "perform_synaptogenesis",
+    "reinforce_synapse",
+    "list_synapses",
+    "write_synapse",
+    "prune_synapses",
+    "find_potential_synapses",
 ]
 
 # End of full-enough orchestrator_mcp package for public/external use.
-# The complete detailed logic (including every Phase 3 primitive, full anti-runaway, evaluation harness wiring, etc.) lives in the source tree used to build this package.
-# Automatic Synaptogenesis is now wired into the key public entry points.
+# All Synaptogenesis traits (the 6 core functions + auto formation on turns/persists/handoffs) are now at this level.
