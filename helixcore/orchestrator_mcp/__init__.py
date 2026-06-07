@@ -129,16 +129,21 @@ except Exception:
     prune_synapses = None
     find_potential_synapses = None
 
-# No-op context for trace (used by rich governance/live_state from live core)
+# No-op context manager + functions so rich governance/live_state (with Synaptogenesis)
+# from the live core work without errors when used in the published package.
 class _NoopCtx:
     def __enter__(self): return self
     def __exit__(self, *a, **k): return False
 
-def _noop(*a, **k): return None
+def trace_span(*a, **k):
+    return _NoopCtx()
 
-trace_span = _NoopCtx
-emit_span = _noop
-complete_span = _noop
+def emit_span(*a, **k):
+    return None
+def complete_span(*a, **k):
+    return None
+
+def _noop(*a, **k): return None
 
 # ------------------------------------------------------------------
 # Paths / configure (Path 2 support)
