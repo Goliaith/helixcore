@@ -279,30 +279,14 @@ def list_synapses(limit: int = 50, min_strength: float = 0.0) -> List[Dict[str, 
 
 def find_potential_synapses(max_candidates: int = 20, task_slug: Optional[str] = None) -> List[Dict[str, Any]]:
     """Lean discovery of high-potential new synapses.
-    Uses comprehensive clusters + actual cross-slug semantic overlap for smarter, more efficient discovery.
-    Boosts with chemotaxis where available. For peak efficiency in self-improvement.
+    Uses representative clusters + cross-slug semantic overlap for discovery.
+    For the public package, we use a compact set of example clusters (full historical data from the 5-week work is in the examples/semantic and examples/synaptic sample files).
     """
-    # Comprehensive clusters covering ALL major semantic memory themes from live data (125 slugs).
-    # Intra-cluster for dense local connections; the finder + manual seeding will cover.
+    # Compact representative clusters for public package (full internal clusters from dogfooding are in the example data files)
     clusters = [
-        # HelixCore Core, Packaging, Industry, UX, Orchestrator
-        ["helixcore", "helixcore-2026-closure", "helixcore-v1-ambition-2026", "helixcore-industry-analysis-2026", "helixcore-industry-comparison-2026", "helixcore-opportunities-impl-2026-06-04", "helixcore-ux-production-readiness", "helixcore-core-ux-natural-interaction", "helixcore-final-split-check", "helixcore-workbench-app-build-20260604-203141", "orchestrator-mcp-facade-drift-alignment-20260604-201901", "orchestrator-mcp-split-review-20260604-200706", "doc-hygiene-orchestrator-mcp-20260604-201404", "sdist-target-030", "packaged-test", "packaged-semantic-test"],
-        # Memory, Coherence, Synthesis, DreamWeaver, Mycelium, Briefing
-        ["helixcore-memory-coherence-upgrades", "system-coherence-synthesis-2026-06", "system-coherence-synthesis-2026-06-02", "system-coherence-synthesis-dogfood-2026-06-02", "helix-memory-coherence-sandbox-eval", "refine-satisfying-briefing", "governance-anti-runaway-split-test"],
-        # Autonomy: Chemotaxis, Market, Serendipity, Gradients
-        ["helixcore-autonomy-chemotaxis-market-hybrid", "helixcore-autonomy-market-economy", "test-autonomy-chemotaxis-real-task", "serendipity-orchestrator-test"],
-        # Stress, Performance, Anti-Runaway, Evaluations, Discipline, Compliance, Closed-Loop
-        ["ultimate-stress", "ultimate-intense-throttled-stress-2026-06-04", "system-performance-analysis-2026", "anti-runaway-verification-1780360430", "post-stress-core-eval-2026-06-04", "stress-volume", "p2-closedloop-stress", "eval-enforce-test", "eval-meta-audit-verification-1780360394", "eval-meta-audit-verification-1780360419", "eval-meta-audit-verification-1780372580", "improve-evaluation-harness-pillar5", "batch2-harness-policy-check", "score-to-10-improvements-2026-06-04", "reanalysis-score-to-10-2026-06-04", "targeted-dogfood-gaps-to-10-2026-06-04", "significant-dogfooding-discipline-push-2026-06-04", "compliance-boost-discipline-remediation-2026-06-04", "discipline-boost-real-work-2026-06-04", "fix-governance-eval-pillar-2026-06-04", "closed-loop", "command-execution-safety-policy", "high_risk"],
-        # Training Regimes, Bachelors, Math, Epistemology, K12, Capability Enhancement
-        ["bachelors-epistemology-training-regime", "bachelors-mathematics-training-regime", "bachelors-physics-training-regime", "governed-epistemology-training-workbench-20260604", "governed-math-training-workbench-20260604-204044", "governed-physics-training-workbench-20260604", "k12-school-curriculum-training-regime", "math-abstract_algebra", "math-ai_applications", "math-bayesian_confirmation", "math-calc_i", "math-calc_ii", "math-calc_iii", "math-capstone", "math-capstone_physics", "math-classical_mechanics", "math-complex_analysis", "math-differential_equations", "math-electromagnetism", "math-feyerabend_pluralism", "math-formal_epistemology", "math-history_of_science_cases", "math-kuhn_paradigms", "math-lakatos_programmes", "math-linear_algebra", "math-number_theory", "math-popper_falsification", "math-probability_statistics", "math-quantum_mechanics", "math-real_analysis", "math-special_relativity", "math-statistical_mechanics", "math-thermodynamics", "math-waves_optics", "mathematical-architectural-2d-to-3d-demo", "mathematical-challenges-humans-ai", "mathematics-capability-enhancement", "mathematics-challenges-humans-ai", "mathematics-fundamentals-self-education", "mathematics-math-dataset-attempt-v3", "mathematics-math-dataset-full-attempt", "mathematics-mathset-training-40pct", "mathematics-proofs-self-education", "mathematics-reading-comprehension-terminology-training", "aimo-challenge-attempt-v2", "aimo-test-evaluation-knowledge-acquisition"],
-        # Real-World, Proposals, External Challenges, Self-Improvement
-        ["proposal-generation", "real-world-challenge-20260602-0044", "real-world-challenge-20260602-0044-branch-8afcb0", "external-real-work-example-2026", "external-real-work-example-2026-synthesis", "self-analysis-highest-impact-improvement"],
-        # Specific Prototypes, Demos, Hygiene, Splits, Access
-        ["helixcore-precise-editor-prototype-2026-06", "helixcore-distribution-hygiene", "helixcore-internet-research-demo", "helixcore-industry-comparison-2026-06-04", "composer-ux-everywhere", "access-helixcore", "helixcore-performance-report-2026-06", "helixcore-overall-system-analysis-20260604-202504"],
-        # Scientific & Math Challenges (Riemann, etc.)
-        ["riemann-hypothesis-rigorous-attack"],
-        # Misc / General / Global / Test / Status / Pre-split
-        ["general", "global", "smoke-test-minimal", "ux-smoke-test", "Status_report_delivered_for_completed_intense_throttled_stress_test__Full_duration_run__550_self-throttles__anti-runaway_0__slug_discipline_85_Excellent__reports_updated__clean_0_active_orchs__safety_calm__All_per_user_monitoring_rules_and_UX_standard_", "pre-split-test-1780602906", "pre-split-test-1780602943", "pre-split-test-1780602965", "pre-split-test-1780602988", "test-natural-language-feel-2026", "synaptogenesis-mvp-impl-seeding"],
+        ["helixcore", "helixcore-memory-coherence-upgrades", "external-dogfood-2026-06-07", "helixcore-2026-closure"],
+        ["system-coherence-synthesis-2026-06-02", "ultimate-stress", "helixcore-autonomy-chemotaxis-market-hybrid"],
+        ["governed-math-training-workbench-20260604-204044", "mathematics-mathset-training-40pct", "bachelors-physics-training-regime"],
     ]
     potentials: List[Dict[str, Any]] = []
     for i, cl in enumerate(clusters):
@@ -313,7 +297,7 @@ def find_potential_synapses(max_candidates: int = 20, task_slug: Optional[str] =
                         "from": a,
                         "to": b,
                         "potential": round(0.72 + (i * 0.04), 2),
-                        "reason": "High thematic overlap in HelixCore self-improvement work (coherence/autonomy/DreamWeaver/chemotaxis/memory glue clusters from live semantic data)",
+                        "reason": "High thematic overlap in HelixCore self-improvement work (example clusters; full data in examples/semantic and examples/synaptic)",
                         "suggested_type": "federation" if any(x in (a+b).lower() for x in ["coher", "weave", "memory"]) else "gradient-flow",
                     })
     # Dedup
@@ -325,30 +309,29 @@ def find_potential_synapses(max_candidates: int = 20, task_slug: Optional[str] =
             seen.add(key)
             uniq.append(p)
 
-    # Smart enhancement for peak efficiency: scan actual semantic memories for high keyword overlap across slugs
-    # Sample key active slugs (prioritize coherence, autonomy, training, stress for self-improvement)
-    smart_slugs = ["helixcore-memory-coherence-upgrades", "system-coherence-synthesis-2026-06-02", "helixcore-autonomy-chemotaxis-market-hybrid", "ultimate-stress", "governed-math-training-workbench-20260604-204044", "bachelors-physics-training-regime", "proposal-generation"]
+    # Smart enhancement using the included sample semantic data
     try:
+        smart_slugs = ["helixcore-memory-coherence-upgrades", "external-dogfood-2026-06-07", "system-coherence-synthesis-2026-06-02"]
         overlap_pairs = []
         for i, slug_a in enumerate(smart_slugs):
-            mems_a = list_semantic_memories(slug_a, limit=5)
+            mems_a = list_semantic_memories(slug_a, limit=3)
             content_a = " ".join(m.get("content", "") for m in mems_a).lower()
             words_a = set(re.findall(r"\w+", content_a))
-            if len(words_a) < 5: continue
+            if len(words_a) < 3: continue
             for slug_b in smart_slugs[i+1:]:
-                mems_b = list_semantic_memories(slug_b, limit=5)
+                mems_b = list_semantic_memories(slug_b, limit=3)
                 content_b = " ".join(m.get("content", "") for m in mems_b).lower()
                 words_b = set(re.findall(r"\w+", content_b))
-                if len(words_b) < 5: continue
+                if len(words_b) < 3: continue
                 overlap = len(words_a & words_b) / max(1, len(words_a | words_b))
-                if overlap > 0.15:
+                if overlap > 0.1:
                     overlap_pairs.append({
                         "from": slug_a, "to": slug_b,
                         "potential": round(0.65 + overlap * 0.3, 2),
-                        "reason": f"High semantic keyword overlap ({round(overlap*100)}%) between memories in {slug_a} and {slug_b} (discovered via cross-slug scan for efficient connection formation)",
-                        "suggested_type": "serendipity" if "coher" in slug_a+slug_b else "analogous"
+                        "reason": f"High semantic keyword overlap from included sample data between {slug_a} and {slug_b}",
+                        "suggested_type": "serendipity"
                     })
-        for op in overlap_pairs[:max_candidates//2]:
+        for op in overlap_pairs:
             key = tuple(sorted([op["from"], op["to"]]))
             if key not in seen:
                 seen.add(key)
@@ -356,17 +339,6 @@ def find_potential_synapses(max_candidates: int = 20, task_slug: Optional[str] =
     except Exception:
         pass
 
-    # Boost if chemotaxis available and task matches
-    try:
-        om = sys.modules.get("orchestrator_mcp")
-        if om and task_slug and hasattr(om, "compute_chemotaxis_gradients"):
-            chem = om.compute_chemotaxis_gradients(task_slug)
-            if chem and chem.get("top_foraged_paths"):
-                for p in uniq[:5]:
-                    p["potential"] = min(1.0, p["potential"] + 0.08)
-                    p["reason"] += " + chemotaxis gradient boost"
-    except Exception:
-        pass
     return uniq[:max_candidates]
 
 
