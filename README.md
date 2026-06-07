@@ -56,6 +56,31 @@ configure(home="/tmp/my-claude-project")   # or set HELIXCORE_HOME before import
 
 See the [30-minute on-ramp](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest way to feel the patterns.
 
+## Authorship & Immutable Signing
+
+This project is created and maintained by **MrSilhouette**.
+
+The name **"MrSilhouette" is permanently locked** as the canonical author and copyright holder. It is explicitly recorded in:
+
+- LICENSE ("Copyright (c) 2026 MrSilhouette")
+- pyproject.toml (authors)
+- This README
+- Every commit message via the required `Signed-off-by: MrSilhouette ...` trailer
+
+**It is not allowed to be removed.**
+
+All commits must be GPG-signed. The combination of:
+- Copyright notice
+- Author metadata
+- DCO sign-off
+- Required GPG signatures (enforced via GitHub branch protection on `main` and CONTRIBUTING rules)
+
+makes the attribution effectively immutable. Rewriting history to strip the name would break signature verification.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the exact local `git config` commands, GPG setup, and the GitHub branch protection settings that protect this lock.
+
+All official changes carry the sign-off.
+
 ## Features
 
 ### The 6 Pillars (battle-tested during 5 weeks of intensive dogfooding)
