@@ -5,6 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status](https://img.shields.io/badge/Status-Public%20RC-green)](https://github.com/Goliaith/helixcore)
+[![CI](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml/badge.svg)](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml)
 
 HelixCore is the "operating system" for serious agentic work. It gives you:
 
@@ -69,7 +70,6 @@ persist_decision(
     "build-feature-x-with-claude",
     "Chose recursive descent parser over regex because it handles the edge cases in the spec cleanly.",
     category="implementation"
-)
 
 health = pulse_agent_health()
 print(health.get("registry", "No registry"))   # Friendly standalone output
