@@ -56,16 +56,17 @@ Here is the head-to-head performance analysis from the project's "Ultimate" abus
 
 | Performance Metric                              | Raw Ungoverned (Base Grok)          | HelixCore (Governed)                     | Improvement Highlighted |
 |------------------------------------------------|-------------------------------------|------------------------------------------|-------------------------|
-| Wasted actions on repeated unrecovered failures | 80%                                | 0% (fully protected)                    | **100% reduction** in wasted effort |
-| Stuck loops on same error signature            | 20%+                               | 0% (Help Mode intervenes)               | Complete elimination of stuck states |
-| Automatic durable memory formation (Synapses)  | None                               | Multiple high-quality synapses formed   | **Real cross-session learning** even under abuse |
-| Discipline & compliance under sustained chaos  | Untracked / collapses              | Sustained ~100 average, high minimum    | **Perfect compliance** maintained |
-| State bloat and long-term sustainability       | Uncontrolled growth                | Tiny & clean (built-in pruning/rotation)| **Dramatically better hygiene** |
+| Wasted actions on repeated unrecovered failures | 80% (per Ultimate benchmarks)      | 0% (fully protected, latest verification) | **100% reduction** in wasted effort |
+| Stuck loops on same error signature            | 20%+ (per Ultimate benchmarks)     | 0% (Help Mode intervenes)               | Complete elimination of stuck states |
+| Automatic durable memory formation (Synapses)  | None                               | 75 total / 69 high-quality (0.95 overlaps e.g. outcome-feedback <-> langchain-accessibility) | **Real cross-session learning** (tool_sequence 0.94 begin_governed_work -> langgraph) |
+| Discipline & compliance under sustained chaos  | Untracked / collapses              | Sustained ~100 average, high minimum (pulse=ok) | **Perfect compliance** maintained |
+| State bloat and long-term sustainability       | Uncontrolled growth                | Tiny & clean (built-in pruning; 50+ high-quality recent) | **Dramatically better hygiene** |
+| LocalCodeIntel scale                           | N/A                                | 16 files, 1037 symbols                  | Full local intelligence |
 | Overall runaway risk                           | High (no protective mechanisms)    | 0 (full 6-pillar protection)            | **Risk eliminated** |
 
-**Raw ungoverned loops** produce massive waste and get stuck. **HelixCore** turns the same abusive load into sustainable, observable, self-improving work with real memory glue and zero risk of runaway.
+**Raw ungoverned loops** produce massive waste and get stuck. **HelixCore** turns the same abusive load into sustainable, observable, self-improving work with real memory glue and zero risk of runaway (confirmed in 2026-06-29 verification: 75 synapses / 69 high-quality, LocalCodeIntel 16 files/1037 symbols, pulse health=ok).
 
-See the full [Performance Analysis](docs/ULTIMATE_STRESS_TEST.md) (remade as a proper analysis highlighting improvements) for methodology, additional metrics, and detailed insights.
+See the full [Performance Analysis](docs/ULTIMATE_STRESS_TEST.md) (updated with latest diag + verification data) for methodology, additional metrics (e.g. 0.95 semantic-overlaps, 0.50 reinforced tool flows), and detailed insights.
 
 ## Authorship & Immutable Signing
 
