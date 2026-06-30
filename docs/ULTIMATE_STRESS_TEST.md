@@ -37,7 +37,7 @@ This table is framed as a **performance analysis** that highlights the concrete 
 
 ## Analysis: What the Improvements Mean
 
-**Raw ungoverned loops** appear productive in short, happy-path benchmarks because they do almost nothing per iteration. Under the exact conditions of real long-running agentic work (repeated failures on the same signatures, sustained load, need for memory across turns), they produce:
+**Raw ungoverned loops** appear productive in short, success-only benchmarks because they do almost nothing per iteration. Under the exact conditions of real long-running agentic work (repeated failures on the same signatures, sustained load, need for memory across turns), they produce:
 
 - Massive waste (~80% of failures are unrecovered repeats)
 - Frequent "stuck" behavior (20%+ of failures)

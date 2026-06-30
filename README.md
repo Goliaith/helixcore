@@ -58,7 +58,7 @@ See the [30-minute tutorial](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest ha
 
 ## Why HelixCore? The Evidence
 
-Raw LLM loops appear fast on happy paths but collapse under real conditions: repeated failures, long-running work, and the need for memory across sessions.
+Raw LLM loops appear fast on simple successful runs but collapse under real conditions: repeated failures, long-running work, and the need for memory across sessions.
 
 See the [30-minute tutorial](docs/HELIXCORE_IN_30_MINUTES.md) first if you want to experience the difference quickly. The table below shows head-to-head results from the project's "Ultimate" stress test (8 workers, high failure injection, repeated identical error signatures, and chaos — the same pattern used in the five-week internal dogfooding). It highlights the concrete improvements delivered by HelixCore.
 
