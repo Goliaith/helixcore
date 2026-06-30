@@ -124,10 +124,6 @@ print(get_status_report(friendly=True))
 
 After running, explore the created state. It lives under your `HELIXCORE_HOME` (or `~/.grok/state/tasks/...` by default). Look for the task directory, handoff records, and decision logs.
 
-## What You Just Experienced
-
-You used the same governed patterns that were hardened through weeks of extreme stress testing and real agentic work. The core capabilities (governance, memory glue via Synaptogenesis, anti-runaway protection, evaluation, observability) are now packaged in a small, dependency-free library that works standalone or alongside any model or framework.
-
 ## Next Steps
 
 - Read the full [Public Readiness Summary](HelixCore_Public_Readiness_Summary_2026-06-07.md) (same docs folder)
