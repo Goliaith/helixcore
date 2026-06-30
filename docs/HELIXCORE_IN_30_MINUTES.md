@@ -1,82 +1,150 @@
 # HelixCore in 30 Minutes
 
-**Goal**: Get a new external Python developer from zero to applying governed patterns on a small real task in about 30 minutes.
+**Goal**: Take a new external Python developer from zero to applying governed patterns on a real task in about 30 minutes.
 
-This is the fastest practical on-ramp for HelixCore.
+This is the fastest practical on-ramp. By the end of this guide you will have:
+
+- Installed HelixCore
+- Run a complete governed session
+- Observed live state, phase handoffs, and persisted decisions
+- Applied the patterns to one of your own tasks
 
 ## Prerequisites
 
-- Python 3.10+
-- 15 minutes of focused time
-- (Optional) A small personal project or task you're currently thinking about
+- Python 3.10 or newer
+- 15–20 minutes of focused time
+- (Strongly recommended) A small personal task or project you are actively working on
 
-## Step 1: Easy Install (2 minutes)
+## Step 1: Install HelixCore (≈ 2 minutes)
 
-The most reliable way (especially on Windows with multiple Pythons):
+Use the reliable local installation method:
 
 ```powershell
-# 1. Clone
+# Clone the repository
 git clone https://github.com/Goliaith/helixcore.git
 cd helixcore
 
-# 2. Install from the local directory (avoids git+ / launcher issues)
+# Install from the local directory (recommended on Windows)
 python -m pip install .
 
-# 3. Verify
+# Verify the installation
 python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
 ```
 
-Alternatives (when they work for you):
-- One-liner: `pip install git+https://github.com/Goliaith/helixcore.git`
-- Editable for development: `pip install -e .` after clone
+Alternative options:
 
-Optional isolation (great for Claude-only or per-project work):
-```powershell
-$env:HELIXCORE_HOME = "C:\tmp\my-helixcore-project"
+```bash
+# Editable install (useful while learning)
+pip install -e .
+
+# Optional one-liner (if your environment supports it)
+pip install git+https://github.com/Goliaith/helixcore.git
 ```
 
-## Step 2: Feel the Patterns (5 minutes)
+**Optional**: isolate state for this experiment:
+
+```powershell
+$env:HELIXCORE_HOME = "C:\tmp\helixcore-30min-demo"
+```
+
+## Step 2: Experience the Core Patterns (≈ 5 minutes)
+
+Run this complete, self-contained script:
 
 ```python
-from helixcore import begin_governed_work, record_phase_handoff, persist_decision, pulse_agent_health, get_status_report
+from helixcore import (
+    begin_governed_work,
+    record_phase_handoff,
+    persist_decision,
+    pulse_agent_health,
+    get_status_report,
+)
 
+# 1. Start a governed session — the primary entry point
 result = begin_governed_work(
     task_slug="30-min-demo",
     initial_focus="Explore what governed agentic work feels like",
-    mode="light"
+    mode="light",                 # Start light; try "standard" or "disciplined" later
 )
 
-record_phase_handoff("Step 1 complete", "Step 2: add a decision", "30-min-demo")
-persist_decision("30-min-demo", "This feels much more intentional than raw prompting.")
+print("Session started. Current state preview:")
+print(get_status_report(friendly=True))
+
+# 2. Simulate real work (in practice you would call your LLM here)
+record_phase_handoff(
+    summary="Initial exploration complete",
+    next_focus="Record a decision and inspect full state",
+    task_slug="30-min-demo",
+)
+
+persist_decision(
+    task_slug="30-min-demo",
+    decision="HelixCore makes the disciplined thing the easy thing and keeps it visible.",
+    category="impression",
+)
+
+print("\nHealth pulse:")
+print(pulse_agent_health())
+```
+
+**What to look for**:
+
+- An explicit session start with context and safety registration
+- A phase handoff recorded as durable memory
+- Friendly, readable English output from `get_status_report`
+- The system still knows about your task after the script exits (inspect the state directory)
+
+## Step 3: Use It on Real Work (≈ 15–20 minutes)
+
+Choose a real task you are working on today and wrap its key phases:
+
+```python
+result = begin_governed_work(
+    task_slug="my-real-task-2026-06",
+    initial_focus="The concrete goal you are pursuing right now",
+    mode="standard",
+)
+
+# ... your normal work and LLM calls go here ...
+
+record_phase_handoff(
+    summary="Important milestone reached",
+    next_focus="Next concrete step or verification",
+    task_slug="my-real-task-2026-06",
+)
+
+persist_decision(
+    task_slug="my-real-task-2026-06",
+    decision="The reasoning behind a significant choice you just made",
+    category="design",
+)
 
 print(get_status_report(friendly=True))
 ```
 
-Watch for:
-- The system remembering context across turns
-- Explicit handoffs that become durable memory
-- The friendly pulse output even in pure standalone mode
-
-## Step 3: Use It on Real Work (the rest of the 30 minutes)
-
-Pick one of your actual tasks and wrap it:
-
-```python
-result = begin_governed_work("my-real-claude-task", "Whatever you're building with Claude or another model")
-
-# ... do the work, calling your LLM as usual ...
-
-record_phase_handoff("...", "...", "my-real-claude-task")
-```
-
-Then explore the live state that was created under your configured home (or default `~/.grok/state/tasks/my-real-claude-task`).
+After running, explore the created state. It lives under your `HELIXCORE_HOME` (or `~/.grok/state/tasks/...` by default). Look for the task directory, handoff records, and decision logs.
 
 ## What You Just Experienced
 
-You just used the same patterns that were developed and validated through extreme stress testing, cross-language SRSI studies, and public-readiness hardening — all completed in 5 weeks of focused work in June 2026 — now available as a small, importable Python library.
+You used the same governed patterns that were hardened through weeks of extreme stress testing and real agentic work. The core capabilities (governance, memory glue via Synaptogenesis, anti-runaway protection, evaluation, observability) are now packaged in a small, dependency-free library that works standalone or alongside any model or framework.
 
-Next steps: read the full [Public Readiness Summary](HelixCore_Public_Readiness_Summary_2026-06-07.md) and the Golden Paths quick reference in this docs folder.
+## Next Steps
+
+- Read the full [Public Readiness Summary](HelixCore_Public_Readiness_Summary_2026-06-07.md) (same docs folder)
+- Browse the [Golden Paths Quick Reference](golden_paths_quick_reference.md) or run:
+  ```python
+  from helixcore import list_golden_paths
+  print(list_golden_paths())
+  ```
+- Try `examples/simple_claude_dogfood.py`
+- Review the main [README.md](../README.md) for the complete feature list and performance data
+
+## Troubleshooting
+
+- **ImportError**: Ensure you ran `pip install .` (or `-e .`) from the repository root.
+- **State does not persist**: Set `HELIXCORE_HOME` explicitly or check the path printed by `get_status_report()`.
+- **Need more structure**: Switch to `mode="disciplined"` and call `record_phase_handoff` at every natural boundary.
 
 ---
 
-*This guide is intentionally lightweight so you can feel the value quickly. The depth is in the actual patterns and the local memory glue.*
+This guide is intentionally short. The real value comes from consistent use of these patterns on actual work. Clear task slugs, regular phase handoffs, and recorded decisions compound quickly.

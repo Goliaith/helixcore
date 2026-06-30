@@ -7,11 +7,19 @@
 [![Status](https://img.shields.io/badge/Status-Public%20RC-green)](https://github.com/Goliaith/helixcore)
 [![CI](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml/badge.svg)](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml)
 
-HelixCore is the governance layer that makes serious agentic work reliable. It gives you explicit phase handoffs, durable memory glue (Synaptogenesis), anti-runaway protection, closed-loop self-improvement, health pulses, and a complete local-first stack — all in a small, importable Python package.
+HelixCore is the governance layer that makes serious agentic work reliable. It delivers explicit phase handoffs, durable memory glue (Synaptogenesis), anti-runaway protection, closed-loop self-improvement, health pulses, and a complete local-first stack — all in a small, importable Python package.
 
-It works **completely standalone** (zero external dependencies required) or layered on top of LangGraph, CrewAI, LlamaIndex, custom agents, Claude, GPT, or any other model/framework.
+It works **completely standalone** (zero external dependencies required) or layered on top of LangGraph, CrewAI, LlamaIndex, custom agents, Claude, GPT, or any other model or framework.
 
 > "You bring the LLM calls. HelixCore brings the discipline, memory, and safety."
+
+## Tutorials & Getting Started
+
+| Guide | Time | Best For |
+|-------|------|----------|
+| [HelixCore in 30 Minutes](docs/HELIXCORE_IN_30_MINUTES.md) | ~30 min | Fastest hands-on experience for new users |
+| [Getting Started](docs/GETTING_STARTED.md) | 10–15 min read | Full options for external developers and Grok TUI users |
+| [Golden Paths Quick Reference](docs/golden_paths_quick_reference.md) | 5 min | Which high-level helper to reach for |
 
 ## Installation (No Pre-built Wheel Required)
 
@@ -46,13 +54,13 @@ from helixcore import configure
 configure(home="/tmp/my-claude-project")   # or set HELIXCORE_HOME before import
 ```
 
-See the [30-minute on-ramp](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest way to feel the patterns.
+See the [30-minute tutorial](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest hands-on experience.
 
-## Why HelixCore? The Table That Proves It
+## Why HelixCore? The Evidence
 
-Raw LLM loops look fast on happy paths but collapse under real conditions (repeated failures, long-running work, need for memory across sessions).
+Raw LLM loops appear fast on happy paths but collapse under real conditions: repeated failures, long-running work, and the need for memory across sessions.
 
-Here is the head-to-head performance analysis from the project's "Ultimate" abusive stress test (8 workers, high failure injection, repeated identical error signatures, chaos — the exact pattern used in the 5-week internal dogfooding). The table is framed to highlight the concrete improvements delivered by HelixCore:
+See the [30-minute tutorial](docs/HELIXCORE_IN_30_MINUTES.md) first if you want to experience the difference quickly. The table below shows head-to-head results from the project's "Ultimate" stress test (8 workers, high failure injection, repeated identical error signatures, and chaos — the same pattern used in the five-week internal dogfooding). It highlights the concrete improvements delivered by HelixCore.
 
 | Performance Metric                              | Raw Ungoverned (Base Grok)          | HelixCore (Governed)                     | Improvement Highlighted |
 |------------------------------------------------|-------------------------------------|------------------------------------------|-------------------------|
@@ -64,9 +72,9 @@ Here is the head-to-head performance analysis from the project's "Ultimate" abus
 | LocalCodeIntel scale                           | N/A                                | 16 files, 1037 symbols                  | Full local intelligence |
 | Overall runaway risk                           | High (no protective mechanisms)    | 0 (full 6-pillar protection)            | **Risk eliminated** |
 
-**Raw ungoverned loops** produce massive waste and get stuck. **HelixCore** turns the same abusive load into sustainable, observable, self-improving work with real memory glue and zero risk of runaway (confirmed in 2026-06-29 verification: 75 synapses / 69 high-quality, LocalCodeIntel 16 files/1037 symbols, pulse health=ok).
+**Raw ungoverned loops** produce massive waste and get stuck. **HelixCore** turns the same load into sustainable, observable, self-improving work with real cross-session memory and zero risk of runaway (2026-06-29 verification: 75 synapses / 69 high-quality, LocalCodeIntel 16 files / 1037 symbols, pulse health = ok).
 
-See the full [Performance Analysis](docs/ULTIMATE_STRESS_TEST.md) (updated with latest diag + verification data) for methodology, additional metrics (e.g. 0.95 semantic-overlaps, 0.50 reinforced tool flows), and detailed insights.
+See the full [Performance Analysis](docs/ULTIMATE_STRESS_TEST.md) for methodology and detailed numbers. Start with the [30-minute tutorial](docs/HELIXCORE_IN_30_MINUTES.md) to experience the patterns in code.
 
 ## Authorship & Immutable Signing
 
@@ -94,7 +102,7 @@ All commits must be GPG-signed. See [CONTRIBUTING.md](CONTRIBUTING.md) for the e
 6. **Meta-Audit & Self-Improvement Cycles** — pulse_agent_health, system coherence audits, discipline scoring, adoption measurement.
 
 ### High-Leverage Capabilities
-- **Golden Paths** — `begin_governed_work()`, `perform_synthesis()`, `with_governed_context()`, `governed_research_initiative()`, etc. The "right thing" is the easiest thing.
+- **Golden Paths** — `begin_governed_work()`, `perform_synthesis()`, `with_governed_context()`, `governed_research_initiative()`, and others. The right thing becomes the easiest thing.
 - **Complete Local Stack** (no mandatory external services)
   - LocalCodeIntel — fast symbol search, smart surgical edits, diff-native, sub-100 ms on real codebases.
   - LocalSemanticMemory + Synaptogenesis — pure-local keyword+recency + explicit connection formation (included sample data from the 5-week work).

@@ -1,103 +1,120 @@
-**Full content from local docs/GETTING_STARTED.md populated here for the public repo.**
-
 # Getting Started with HelixCore
 
-**Best first experience (external developers, no Grok required):**
+**Goal**: Move from zero to governed, observable agentic work on real tasks as quickly and reliably as possible.
 
-```bash
-cd helixcore-packaging/standalone_playground
-python demo.py
-```
+Whether you are an external Python developer or working inside the Grok Build TUI, these instructions take you to a working setup in minutes.
 
-This is a beautiful, self-contained, zero-dependency walkthrough of the entire philosophy (Golden Paths, phase handoffs, anti-runaway, discipline, live state). It is the highest-leverage thing you can do in the first five minutes.
+## Prerequisites
 
-After the demo, read `standalone_playground/README.md`.
+- Python 3.10 or newer
+- Basic familiarity with Python, imports, and virtual environments
+- (Recommended) A capable coding environment or model
 
----
+## Option A: External Python Developers (Recommended)
 
-## For External Python Developers (Primary Path)
+### 1. Clone and Install
 
-1. Install the package in editable mode:
-   ```bash
-   cd packaging
-   pip install -e .
-   ```
-
-2. Run the philosophy demo (highly recommended — try interactive mode!):
-   ```python
-   python -m standalone_playground.demo
-   ```
-   When it starts, answer **y** to the interactive prompt. This pauses at phase boundaries so you can explore the live state, feel the handoffs, and truly experience the governed rhythm. This is the best production-ready first UX for understanding the value.
-
-3. Then use the patterns in your own code:
-   ```python
-   from helixcore import begin_governed_work, persist_decision, record_phase_handoff, record_simple_decision
-
-   begin_governed_work("my-real-project", "Ship the new feature with proper governance")
-   ...
-   record_phase_handoff("Design phase done", "Implementation", "my-real-project")
-
-   # For frequent decisions during active work:
-   record_simple_decision("my-real-project", "Chose library X for reason Y")
-   ```
-
-The package works completely standalone using local JSON files for state. You get the full discipline and coherence benefits without any proprietary components.
-
-See `standalone_playground/README.md` for the deep tour and `docs/golden_paths_quick_reference.md` for the current helpers (including new ergonomic live capture helpers).
-
-## For Existing Grok Users (Recommended — One Command)
-
-If you already use Grok and have this `helixcore-packaging/` folder:
-```powershell
-cd packaging
-.\install.ps1
-```
-
-The installer will:
-- Auto-detect your Grok home
-- Install the `helixcore` package into the right location
-- Copy the key documentation
-- Print clear next steps
-
-After it finishes, the Golden Paths are available in **any** Grok session with a clean import. No manual path configuration needed.
-
-Run the dependency checker afterward (it will be recommended in the output):
+Use the reliable local install method:
 
 ```powershell
-python dependency_checker.py
+# 1. Clone the repository
+git clone https://github.com/Goliaith/helixcore.git
+cd helixcore
+
+# 2. Install from the local directory (most reliable on Windows)
+python -m pip install .
+
+# 3. Verify the installation
+python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
 ```
 
-Then open the guide it prints and start with the starter project examples.
-
-## Prerequisites (for non-Grok or first-time users)
-
-- Python 3.10+
-- Access to a Grok environment that includes at minimum:
-  - **Serena** (strongly recommended for any code-related work)
-  - **Cognee** (recommended for high-level memory)
-  - **Context7** (recommended for library documentation)
-
-> **Tip**: After installing, always run `python dependency_checker.py` to validate your environment.
-
-## Step 1: Get the Core into Your Project
-
-The fastest way is to use the bootstrap helper.
-
-From inside the `helixcore-packaging/` directory:
+For active development or following examples closely:
 
 ```bash
-# Recommended modern layout
-python bootstrap.py --target /path/to/my-project --package-layout --include-examples
+pip install -e .
 ```
 
-This will create a clean `helixcore/` package in your target directory.
+### 2. Run the Example
 
-**Alternative** (flat layout):
-
-```bash
-python bootstrap.py --target /path/to/my-project --include-examples
+```powershell
+python examples/simple_claude_dogfood.py
 ```
 
-## Step 2: Install in Editable Mode (Recommended)
+Review the comments in the script. It demonstrates a complete, minimal governed workflow.
 
-(Additional content from the local GETTING_STARTED.md would continue here for full fidelity in a complete push.)
+### 3. Apply Governance to Your Own Work
+
+Wrap non-trivial work with these calls:
+
+```python
+from helixcore import (
+    begin_governed_work,
+    record_phase_handoff,
+    persist_decision,
+    get_status_report,
+)
+
+# Start governed work for this task
+begin_governed_work(
+    task_slug="my-project-feature",
+    initial_focus="Ship X with proper governance, memory, and traceability",
+    mode="standard",           # "light", "standard", or "disciplined"
+)
+
+# ... perform your normal work and LLM calls here ...
+
+# Mark a natural boundary
+record_phase_handoff(
+    summary="Design and initial implementation complete",
+    next_focus="Add tests and edge-case handling",
+    task_slug="my-project-feature",
+)
+
+# Record a key decision
+persist_decision(
+    task_slug="my-project-feature",
+    decision="Chose approach Y over Z because it handles the required edge cases cleanly and is easier to maintain.",
+    category="design",
+)
+
+# Inspect current state
+print(get_status_report(friendly=True))
+```
+
+State is stored locally (default under `~/.grok/state` or the directory you set via `HELIXCORE_HOME` or `configure()`).
+
+## Option B: Grok Build TUI Users
+
+The helixcore package is usually already importable in the TUI environment.
+
+1. Use the same imports and calls shown above.
+2. The TUI bridge (`helixcore_tui_bridge`, `todo_write`, etc.) integrates directly with `begin_governed_work` and the other primitives.
+3. See your local `E:\AI\Grok\AGENTS.md` and the TUI documentation for environment-specific helpers.
+
+## Core Concepts
+
+| Primitive                  | Purpose                                              | When to Use                              |
+|----------------------------|------------------------------------------------------|------------------------------------------|
+| `begin_governed_work`      | Primary entry point. Starts a tracked session with safety, recall, and briefing. | Almost every non-trivial piece of work   |
+| `record_phase_handoff`     | Records a completed phase and sets the next focus.   | At every natural milestone or handoff    |
+| `persist_decision`         | Persists an important decision with reasoning.       | Key design, implementation, or research choices |
+| `get_status_report(friendly=True)` | Returns readable English summary of current state. | Inspect what the system knows right now  |
+| `pulse_agent_health`       | Quick health and discipline pulse.                   | Monitoring or before/after major steps   |
+| Golden Paths               | Higher-level helpers (`perform_synthesis`, etc.).    | See the Golden Paths Quick Reference     |
+
+## Next Steps
+
+- [HelixCore in 30 Minutes](HELIXCORE_IN_30_MINUTES.md) — hands-on tutorial if you have not completed it yet.
+- [Golden Paths Quick Reference](golden_paths_quick_reference.md) — choose the right high-level helper.
+- Main [README.md](../README.md) — full features, performance data, and architecture.
+- Explore `examples/simple_claude_dogfood.py` and the sample data in `examples/semantic/` and `examples/synaptic/`.
+- Read the source of `helixcore/golden_paths.py` for how the paths are implemented.
+
+## Troubleshooting
+
+- **Import fails**: Run `python -m pip install .` (or `-e .`) from the repository root.
+- **State location is unexpected**: Call `get_status_report()`. It reports the active home directory. Override with the `HELIXCORE_HOME` environment variable or `configure(home=...)`.
+- **Want a lighter start**: Use `mode="light"` or the context manager `with_governed_context`.
+- **Grok TUI issues**: Check your local AGENTS.md and the helixcore TUI bridge documentation.
+
+All governance, memory, and safety capabilities are available immediately after a successful import. Start small, use consistent task slugs, and record phases and decisions at natural boundaries. The system rewards steady, visible discipline.
