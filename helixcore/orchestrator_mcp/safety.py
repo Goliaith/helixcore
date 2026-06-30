@@ -17,6 +17,7 @@ Standalone / external friendly:
 
 from __future__ import annotations
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -24,18 +25,16 @@ from typing import Optional
 # We use runtime lookup to avoid import cycles during split.
 
 def _get_safety_dir():
-    import sys
-    om = sys.modules.get(__name__.rsplit(".", 1)[0]) or sys.modules.get("orchestrator_mcp")
-    if om and hasattr(om, "SAFETY_DIR"):
-        return om.SAFETY_DIR
-    # fallback
-    home = Path.home()
     try:
-        import os
-        home = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
+        from . import get_safety_dir
+        return get_safety_dir()
     except Exception:
         pass
-    return home / ".grok" / "safety"
+    # fallback to env or home
+    env = os.environ.get("HELIXCORE_HOME") or os.environ.get("HELIXCORE_SAFETY_DIR") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+    if env:
+        return Path(env) / ".grok" / "safety"
+    return Path.home() / ".grok" / "safety"
 
 
 def _run_python(code: str) -> str:

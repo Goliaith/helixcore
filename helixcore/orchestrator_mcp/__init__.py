@@ -199,6 +199,21 @@ if os.environ.get("HELIXCORE_HOME") or os.environ.get("HELIXCORE_STATE_DIR") or 
     configure(home=_auto_home, state_dir=_auto_state, safety_dir=_auto_safety)
 
 # ------------------------------------------------------------------
+# Public path getters for consistent isolation across all submodules
+# These always reflect the latest configure() or HELIXCORE_* env.
+# Submodules should prefer these (or _get_state_dir local lazy) over
+# their own module-level HOME/STATE_DIR.
+# ------------------------------------------------------------------
+def get_home() -> Path:
+    return HOME
+
+def get_state_dir() -> Path:
+    return STATE_DIR
+
+def get_safety_dir() -> Path:
+    return SAFETY_DIR
+
+# ------------------------------------------------------------------
 # The key export required by golden_paths.py (and begin_governed_work)
 # ------------------------------------------------------------------
 def disciplined_orchestration_turn(

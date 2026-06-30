@@ -23,6 +23,7 @@ Design goals (matching LocalCodeIntel + LocalProjectMemory):
 """
 
 import json
+import os
 import re
 import time
 from collections import Counter
@@ -30,13 +31,44 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # ------------------------------------------------------------------
-# Paths (consistent with LocalProjectMemory / local code intel)
+# Paths - now lazy and respect configure(home=...) + HELIXCORE_HOME
+# This fixes isolation for standalone / product use (e.g. Helix Lab).
+# We query the orchestrator_mcp configured globals at call time.
 # ------------------------------------------------------------------
 
-HOME = Path.home()
-STATE_DIR = HOME / ".grok" / "state"
-SEMANTIC_DIR = STATE_DIR / "semantic"
-SEMANTIC_DIR.mkdir(parents=True, exist_ok=True)
+def _get_configured_state_dir() -> Path:
+    """Return the currently configured STATE_DIR (updated by configure() or env).
+    Falls back to HELIXCORE_HOME or user home if not yet configured.
+    """
+    try:
+        # Late import avoids any import-time circularity with top __init__
+        from .orchestrator_mcp import STATE_DIR as _state_dir
+        if _state_dir:
+            return Path(_state_dir)
+    except Exception:
+        pass
+    # Fallback mirrors the logic in orchestrator_mcp/__init__.py
+    env_home = (
+        os.environ.get("HELIXCORE_HOME")
+        or os.environ.get("HELIXCORE_STATE_DIR")
+        or os.environ.get("USERPROFILE")
+        or os.environ.get("HOME")
+    )
+    if env_home:
+        return Path(env_home) / ".grok" / "state"
+    return Path.home() / ".grok" / "state"
+
+
+def _get_semantic_dir() -> Path:
+    d = _get_configured_state_dir() / "semantic"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _get_synaptic_dir() -> Path:
+    d = _get_configured_state_dir() / "synaptic"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
 def _safe_slug(slug: str) -> str:
@@ -46,7 +78,7 @@ def _safe_slug(slug: str) -> str:
 def _mem_path(task_slug: str) -> Path:
     """Append-only JSONL for semantic observations."""
     safe = _safe_slug(task_slug)
-    return SEMANTIC_DIR / safe / "memories.jsonl"
+    return _get_semantic_dir() / safe / "memories.jsonl"
 
 
 # ------------------------------------------------------------------
@@ -57,14 +89,43 @@ def write_semantic_memory(
     task_slug: str,
     content: str,
     metadata: Optional[Dict[str, Any]] = None,
+    dedup: bool = True,
 ) -> bool:
     """
     Append a semantic observation / memory for the task.
     Used by persist_decision flows, phase summaries, key retrospectives, etc.
+
+    dedup (default True): this is a *recall* store — duplicate content never improves
+    keyword/recency search, it only dilutes results and grows the file unbounded (e.g.
+    tight telemetry loops re-logging the same outcome). When True, if an entry with
+    identical content already exists for this slug, the existing entry's recency is
+    refreshed in place instead of appending a redundant copy. Pass dedup=False to keep
+    raw append-only history.
     """
     try:
         p = _mem_path(task_slug)
         p.parent.mkdir(parents=True, exist_ok=True)
+        norm = (content or "").strip()
+
+        if dedup and norm and p.exists():
+            existing = []
+            found = False
+            with open(p, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    e = json.loads(line)
+                    if not found and (e.get("content") or "").strip() == norm:
+                        e["ts"] = time.time()  # refresh recency; no duplicate row
+                        found = True
+                    existing.append(e)
+            if found:
+                with open(p, "w", encoding="utf-8", newline="\n") as f:
+                    for e in existing:
+                        f.write(json.dumps(e, ensure_ascii=False) + "\n")
+                return True
+
         entry: Dict[str, Any] = {
             "ts": time.time(),
             "content": content,
@@ -192,15 +253,16 @@ def feed_semantic_from_decision(
 # cluster + chemotaxis-hint based discovery. Cross-slug by default.
 # ------------------------------------------------------------------
 
-SYNAPTIC_DIR = STATE_DIR / "synaptic"
-SYNAPTIC_DIR.mkdir(parents=True, exist_ok=True)
-SYNAPSE_FILE = SYNAPTIC_DIR / "synapses.jsonl"
+def _get_synapse_file() -> Path:
+    syn_dir = _get_synaptic_dir()
+    return syn_dir / "synapses.jsonl"
 
 
 def _append_synapse(entry: Dict[str, Any]) -> bool:
     try:
-        SYNAPTIC_DIR.mkdir(parents=True, exist_ok=True)
-        with open(SYNAPSE_FILE, "a", encoding="utf-8") as f:
+        fpath = _get_synapse_file()
+        fpath.parent.mkdir(parents=True, exist_ok=True)
+        with open(fpath, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         return True
     except Exception:
@@ -208,11 +270,12 @@ def _append_synapse(entry: Dict[str, Any]) -> bool:
 
 
 def _load_all_synapses() -> List[Dict[str, Any]]:
-    if not SYNAPSE_FILE.exists():
+    fpath = _get_synapse_file()
+    if not fpath.exists():
         return []
     entries = []
     try:
-        with open(SYNAPSE_FILE, "r", encoding="utf-8") as f:
+        with open(fpath, "r", encoding="utf-8") as f:
             for line in f:
                 if line.strip():
                     entries.append(json.loads(line))
@@ -223,8 +286,9 @@ def _load_all_synapses() -> List[Dict[str, Any]]:
 
 def _write_all_synapses(entries: List[Dict[str, Any]]) -> bool:
     try:
-        SYNAPTIC_DIR.mkdir(parents=True, exist_ok=True)
-        with open(SYNAPSE_FILE, "w", encoding="utf-8") as f:
+        fpath = _get_synapse_file()
+        fpath.parent.mkdir(parents=True, exist_ok=True)
+        with open(fpath, "w", encoding="utf-8") as f:
             for e in entries:
                 f.write(json.dumps(e, ensure_ascii=False) + "\n")
         return True
@@ -277,69 +341,123 @@ def list_synapses(limit: int = 50, min_strength: float = 0.0) -> List[Dict[str, 
     return deduped[:limit]
 
 
-def find_potential_synapses(max_candidates: int = 20, task_slug: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Lean discovery of high-potential new synapses.
-    Uses representative clusters + cross-slug semantic overlap for discovery.
-    For the public package, we use a compact set of example clusters (full historical data from the 5-week work is in the examples/semantic and examples/synaptic sample files).
+# Minimal stopword set so keyword overlap reflects topical, not grammatical, similarity.
+_SYNAPSE_STOPWORDS = frozenset({
+    "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "for", "with",
+    "at", "by", "from", "is", "are", "was", "were", "be", "been", "being", "this",
+    "that", "these", "those", "it", "its", "as", "we", "you", "they", "them",
+    "our", "your", "their", "have", "has", "had", "do", "does", "did", "not",
+    "no", "so", "if", "then", "than", "what", "which", "who", "when", "where",
+    "how", "all", "can", "will", "would", "should", "into", "out", "up", "via",
+})
+
+
+def _list_semantic_slugs() -> List[str]:
+    """Enumerate real task slugs that actually have a semantic memory store on disk."""
+    base = _get_semantic_dir()
+    slugs: List[str] = []
+    try:
+        for child in base.iterdir():
+            if child.is_dir() and (child / "memories.jsonl").exists():
+                slugs.append(child.name)
+    except Exception:
+        pass
+    return slugs
+
+
+def _demo_example_synapses(max_candidates: int) -> List[Dict[str, Any]]:
+    """Opt-in showcase clusters for empty installs (HELIXCORE_DEMO_SYNAPSES=1).
+
+    These are illustrative only and reference example nodes that do not exist in a
+    real store. They are NEVER emitted into a populated store — see find_potential_synapses.
     """
-    # Compact representative clusters for public package (full internal clusters from dogfooding are in the example data files)
     clusters = [
         ["helixcore", "helixcore-memory-coherence-upgrades", "external-dogfood-2026-06-07", "helixcore-2026-closure"],
         ["system-coherence-synthesis-2026-06-02", "ultimate-stress", "helixcore-autonomy-chemotaxis-market-hybrid"],
-        ["governed-math-training-workbench-20260604-204044", "mathematics-mathset-training-40pct", "bachelors-physics-training-regime"],
     ]
-    potentials: List[Dict[str, Any]] = []
+    seen = set()
+    uniq: List[Dict[str, Any]] = []
     for i, cl in enumerate(clusters):
         for a in cl:
             for b in cl:
-                if a != b:
-                    potentials.append({
-                        "from": a,
-                        "to": b,
-                        "potential": round(0.72 + (i * 0.04), 2),
-                        "reason": "High thematic overlap in HelixCore self-improvement work (example clusters; full data in examples/semantic and examples/synaptic)",
-                        "suggested_type": "federation" if any(x in (a+b).lower() for x in ["coher", "weave", "memory"]) else "gradient-flow",
-                    })
-    # Dedup
-    seen = set()
-    uniq = []
-    for p in potentials:
-        key = tuple(sorted([p["from"], p["to"]]))
-        if key not in seen:
-            seen.add(key)
-            uniq.append(p)
-
-    # Smart enhancement using the included sample semantic data
-    try:
-        smart_slugs = ["helixcore-memory-coherence-upgrades", "external-dogfood-2026-06-07", "system-coherence-synthesis-2026-06-02"]
-        overlap_pairs = []
-        for i, slug_a in enumerate(smart_slugs):
-            mems_a = list_semantic_memories(slug_a, limit=3)
-            content_a = " ".join(m.get("content", "") for m in mems_a).lower()
-            words_a = set(re.findall(r"\w+", content_a))
-            if len(words_a) < 3: continue
-            for slug_b in smart_slugs[i+1:]:
-                mems_b = list_semantic_memories(slug_b, limit=3)
-                content_b = " ".join(m.get("content", "") for m in mems_b).lower()
-                words_b = set(re.findall(r"\w+", content_b))
-                if len(words_b) < 3: continue
-                overlap = len(words_a & words_b) / max(1, len(words_a | words_b))
-                if overlap > 0.1:
-                    overlap_pairs.append({
-                        "from": slug_a, "to": slug_b,
-                        "potential": round(0.65 + overlap * 0.3, 2),
-                        "reason": f"High semantic keyword overlap from included sample data between {slug_a} and {slug_b}",
-                        "suggested_type": "serendipity"
-                    })
-        for op in overlap_pairs:
-            key = tuple(sorted([op["from"], op["to"]]))
-            if key not in seen:
+                if a == b:
+                    continue
+                key = tuple(sorted([a, b]))
+                if key in seen:
+                    continue
                 seen.add(key)
-                uniq.append(op)
-    except Exception:
-        pass
-
+                uniq.append({
+                    "from": a,
+                    "to": b,
+                    "potential": round(0.72 + (i * 0.04), 2),
+                    "reason": "Demo example cluster (HELIXCORE_DEMO_SYNAPSES); not real data",
+                    "suggested_type": "federation",
+                })
     return uniq[:max_candidates]
+
+
+def find_potential_synapses(max_candidates: int = 20, task_slug: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Discover high-potential new synapses from the *actual* local semantic store.
+
+    Computes pairwise keyword (Jaccard) overlap between the real task-slug memory
+    stores under state/semantic/. No synthetic/example data is written into a live
+    store. The legacy demo clusters are opt-in (HELIXCORE_DEMO_SYNAPSES=1) and only
+    used when the store is too sparse to discover anything real.
+
+    When task_slug is given and present in the store, discovery is biased to pairs
+    that include it; otherwise all real slug pairs are considered.
+    """
+    slugs = _list_semantic_slugs()
+
+    # Build a topical keyword set per slug from its memory content.
+    word_sets: Dict[str, set] = {}
+    for s in slugs:
+        mems = list_semantic_memories(s, limit=25)
+        content = " ".join(m.get("content", "") for m in mems).lower()
+        words = {
+            w for w in re.findall(r"[a-z][a-z0-9_-]{2,}", content)
+            if w not in _SYNAPSE_STOPWORDS
+        }
+        if len(words) >= 4:
+            word_sets[s] = words
+
+    names = list(word_sets.keys())
+    if task_slug:
+        safe = _safe_slug(task_slug)
+        anchors = [safe] if safe in word_sets else names
+    else:
+        anchors = names
+
+    potentials: List[Dict[str, Any]] = []
+    seen = set()
+    for a in anchors:
+        for b in names:
+            if a == b:
+                continue
+            key = tuple(sorted([a, b]))
+            if key in seen:
+                continue
+            seen.add(key)
+            wa, wb = word_sets[a], word_sets[b]
+            union = len(wa | wb)
+            if union == 0:
+                continue
+            overlap = len(wa & wb) / union
+            if overlap >= 0.12:
+                potentials.append({
+                    "from": a,
+                    "to": b,
+                    "potential": round(min(0.95, 0.5 + overlap), 2),
+                    "reason": f"Keyword overlap {overlap:.2f} between '{a}' and '{b}' (local semantic store)",
+                    "suggested_type": "semantic-overlap",
+                })
+
+    potentials.sort(key=lambda p: p["potential"], reverse=True)
+
+    if not potentials and os.environ.get("HELIXCORE_DEMO_SYNAPSES") == "1":
+        return _demo_example_synapses(max_candidates)
+
+    return potentials[:max_candidates]
 
 
 def perform_synaptogenesis(task_slug: Optional[str] = None, max_new: int = 8) -> Dict[str, Any]:
@@ -368,23 +486,10 @@ def perform_synaptogenesis(task_slug: Optional[str] = None, max_new: int = 8) ->
         e["last_reinforced"] = time.time()
         e["usage_count"] = e.get("usage_count", 0) + 1
         reinforced += 1
-    # Load all, merge created (as new entries), dedup in list will handle, but rewrite for persist
+    # write_synapse() already persisted each created synapse above; do NOT re-append a
+    # duplicate copy (that was the source of paired federation+auto bloat). Reload the
+    # store (which now includes the created entries) and append reinforced updates only.
     all_entries = _load_all_synapses()
-    for c in created:
-        all_entries.append({
-            "ts": time.time(),
-            "from": c["from"],
-            "to": c["to"],
-            "strength": c["strength"],
-            "type": "auto",
-            "reason": "From perform_synaptogenesis",
-            "created_by": "perform",
-            "task_scope": task_slug or "cross",
-            "last_reinforced": time.time(),
-            "usage_count": 0,
-            "metadata": {}
-        })
-    # Add reinforced as updates
     for e in existing:
         all_entries.append(e)
     _write_all_synapses(all_entries)

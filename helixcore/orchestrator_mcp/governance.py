@@ -15,13 +15,28 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-HOME = Path.home()
-try:
-    import os as _os
-    HOME = Path(_os.environ.get("USERPROFILE") or _os.environ.get("HOME") or Path.home())
-except Exception:
-    pass
-STATE_DIR = HOME / ".grok" / "state"
+# Lazy / configured paths (honor configure() + HELIXCORE_* env for isolation)
+import os as _os_for_paths
+
+def _get_state_dir() -> Path:
+    try:
+        from . import STATE_DIR as _state
+        if _state:
+            return Path(_state)
+    except Exception:
+        pass
+    env = (
+        _os_for_paths.environ.get("HELIXCORE_HOME")
+        or _os_for_paths.environ.get("HELIXCORE_STATE_DIR")
+        or _os_for_paths.environ.get("USERPROFILE")
+        or _os_for_paths.environ.get("HOME")
+    )
+    if env:
+        return Path(env) / ".grok" / "state"
+    return Path.home() / ".grok" / "state"
+
+
+STATE_DIR = _get_state_dir()
 
 def _om():
     import sys
@@ -175,6 +190,14 @@ def disciplined_recall(
                 }
             except Exception:
                 result["code_intel"] = {"available": False, "error": "light retrieval failed"}
+
+        # --- Power Router hint (new high-value capability) ---
+        # If the caller wants power, the router can be invoked separately with governed_power_call
+        # This recall can surface a router_heuristic for the orchestrator to decide escalation.
+        result["power_router_hint"] = {
+            "available": True,
+            "note": "Use route_capability() or governed_power_call() for intelligent escalation to frontier models (Grok, Claude, GPT) while keeping full governance, memory injection, and outcome learning. See power_router module."
+        }
 
         # --- Project memory glue: automatically surface recent phase handoffs from live state ---
         try:
@@ -349,7 +372,7 @@ def synthesize_project_context_briefing(task_slug: str, max_bullets: int = 10, s
     decisions = live.get("key_decisions", []) or []
 
     try:
-        task_dir = os.path.join(os.path.expanduser("~"), ".grok", "state", "tasks", task_slug)
+        task_dir = str(_get_state_dir() / "tasks" / task_slug)
         dec_file = os.path.join(task_dir, "decisions.json")
         file_decisions = []
         if os.path.exists(dec_file):

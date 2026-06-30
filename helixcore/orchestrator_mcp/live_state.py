@@ -10,18 +10,33 @@ Includes Synaptogenesis auto after handoff (live core trait).
 
 from __future__ import annotations
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Minimal path setup (keeps submodule independent)
-HOME = Path.home()
-try:
-    import os
-    HOME = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
-except Exception:
-    pass
-STATE_DIR = HOME / ".grok" / "state"
+# Lazy path setup that respects configure(home=...) and HELIXCORE_* env vars.
+# This ensures standalone/isolated use (e.g. productized Helix Lab) writes only
+# under the user-specified directory.
+def _get_state_dir() -> Path:
+    try:
+        from . import STATE_DIR as _state
+        if _state:
+            return Path(_state)
+    except Exception:
+        pass
+    env = (
+        os.environ.get("HELIXCORE_HOME")
+        or os.environ.get("HELIXCORE_STATE_DIR")
+        or os.environ.get("USERPROFILE")
+        or os.environ.get("HOME")
+    )
+    if env:
+        return Path(env) / ".grok" / "state"
+    return Path.home() / ".grok" / "state"
+
+
+STATE_DIR = _get_state_dir()
 CURRENT_ORCHESTRATION_FILE = STATE_DIR / "current_orchestration.json"
 CHECKPOINTS_DIR = STATE_DIR / "checkpoints"
 

@@ -15,21 +15,26 @@ Philosophy (consistent with the rest of the platform):
 
 from __future__ import annotations
 import json
+import os
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-# === Paths ===
-HOME = Path.home()  # Will be overridden properly when imported via orchestrator_mcp
-try:
-    import os
-    HOME = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
-except Exception:
-    pass
+# === Paths - lazy for configure() isolation ===
+def _get_state_dir() -> Path:
+    try:
+        from .orchestrator_mcp import get_state_dir
+        return get_state_dir()
+    except Exception:
+        pass
+    env = os.environ.get("HELIXCORE_HOME") or os.environ.get("HELIXCORE_STATE_DIR") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+    if env:
+        return Path(env) / ".grok" / "state"
+    return Path.home() / ".grok" / "state"
 
-STATE_DIR = HOME / ".grok" / "state"
+STATE_DIR = _get_state_dir()
 EVAL_DIR = STATE_DIR / "evaluations"
 EVAL_DIR.mkdir(parents=True, exist_ok=True)
 

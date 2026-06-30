@@ -12,13 +12,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-HOME = Path.home()
-try:
-    import os as _os
-    HOME = Path(_os.environ.get("USERPROFILE") or _os.environ.get("HOME") or Path.home())
-except Exception:
-    pass
-STATE_DIR = HOME / ".grok" / "state"
+# Lazy state dir for full configure() support
+def _get_state_dir() -> Path:
+    try:
+        from . import get_state_dir
+        return get_state_dir()
+    except Exception:
+        pass
+    env = os.environ.get("HELIXCORE_HOME") or os.environ.get("HELIXCORE_STATE_DIR") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+    if env:
+        return Path(env) / ".grok" / "state"
+    return Path.home() / ".grok" / "state"
+
+STATE_DIR = _get_state_dir()
 FIX_ATTEMPTS_CACHE = STATE_DIR / "fix_attempts_cache.json"
 
 def _om():

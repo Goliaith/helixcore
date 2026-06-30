@@ -110,7 +110,7 @@ def begin_governed_work(
     -------
     dict
         The result of the first disciplined_orchestration_turn, including
-        project_context_briefing, recommendations, and router_heuristic.
+        project_context_briefing, recommendations, router_heuristic, and power_router_hint (for escalation to powerful models).
     """
     if auto_activate_initiative:
         set_initiative_mode(task_slug, "disciplined", source="explicit")

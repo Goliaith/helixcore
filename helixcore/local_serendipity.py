@@ -238,7 +238,13 @@ if __name__ == "__main__":
     from pathlib import Path
 
     test_slug = "serendipity-demo"
-    sem_dir = Path.home() / ".grok" / "state" / "semantic" / _safe_slug(test_slug)
+    try:
+        from .orchestrator_mcp import get_state_dir
+        sem_dir = get_state_dir() / "semantic" / _safe_slug(test_slug)
+    except Exception:
+        env = os.environ.get("HELIXCORE_HOME") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+        base = Path(env) / ".grok" / "state" if env else Path.home() / ".grok" / "state"
+        sem_dir = base / "semantic" / _safe_slug(test_slug)
     if sem_dir.exists():
         shutil.rmtree(sem_dir)
 

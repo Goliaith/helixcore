@@ -38,16 +38,38 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 # ------------------------------------------------------------------
-# Paths & Constants
+# Paths & Constants - lazy to support configure(home=...) isolation
 # ------------------------------------------------------------------
 
-HOME = Path.home()
-STATE_DIR = HOME / ".grok" / "state"
+def _get_state_dir() -> Path:
+    try:
+        from .orchestrator_mcp import get_state_dir
+        return get_state_dir()
+    except Exception:
+        pass
+    env = os.environ.get("HELIXCORE_HOME") or os.environ.get("HELIXCORE_STATE_DIR") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+    if env:
+        return Path(env) / ".grok" / "state"
+    return Path.home() / ".grok" / "state"
+
+STATE_DIR = _get_state_dir()
 CODE_INTEL_DIR = STATE_DIR / "code_intel"
 CODE_INTEL_DIR.mkdir(parents=True, exist_ok=True)
 
 INDEX_FILE = CODE_INTEL_DIR / "index.json"
-DEFAULT_ROOT = HOME / ".grok"
+
+def _get_default_root() -> Path:
+    try:
+        from .orchestrator_mcp import get_home
+        return get_home() / ".grok"
+    except Exception:
+        pass
+    env = os.environ.get("HELIXCORE_HOME") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+    if env:
+        return Path(env) / ".grok"
+    return Path.home() / ".grok"
+
+DEFAULT_ROOT = _get_default_root()
 
 # Supported extensions + language hints for better extraction
 INDEXABLE_EXTENSIONS = {".py", ".js", ".ts", ".jsx", ".tsx", ".md", ".json", ".yaml", ".yml"}

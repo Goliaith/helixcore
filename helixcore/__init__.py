@@ -95,6 +95,19 @@ from .orchestrator_mcp import (
     write_local_memory,
     read_local_memory,
     list_local_memories,
+    # Path isolation helpers (critical for standalone / productized use like Helix Lab)
+    get_home,
+    get_state_dir,
+    get_safety_dir,
+)
+
+# Power Router - high-value capability amplifier (hybrid local + frontier cloud models under full governance)
+from .orchestrator_mcp.power_router import (
+    estimate_capability,
+    should_escalate,
+    select_power_model,
+    governed_power_call,
+    route_capability,
 )
 
 # Core governance primitives - re-exported for convenient top-level access
@@ -133,9 +146,6 @@ from .orchestrator_mcp import (
     generate_local_observability_report,
     get_evaluation_harness,
     # Distribution Hygiene (now aligned in orchestrator_mcp package)
-    generate_clean_distributable,
-    synthesize_external_handoff,
-    apply_distribution_policy,
 )
 
 __all__ = [

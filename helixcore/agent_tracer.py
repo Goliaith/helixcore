@@ -26,8 +26,19 @@ from datetime import datetime, timezone
 from contextlib import contextmanager
 from typing import Optional, Dict, Any
 
-HOME = Path(os.environ.get("USERPROFILE") or os.environ.get("HOME") or Path.home())
-TRACE_DIR = HOME / ".grok" / "state" / "traces"
+# Lazy trace dir for isolation
+def _get_trace_dir() -> Path:
+    try:
+        from .orchestrator_mcp import get_state_dir
+        return get_state_dir() / "traces"
+    except Exception:
+        pass
+    env = os.environ.get("HELIXCORE_HOME") or os.environ.get("USERPROFILE") or os.environ.get("HOME")
+    if env:
+        return Path(env) / ".grok" / "state" / "traces"
+    return Path.home() / ".grok" / "state" / "traces"
+
+TRACE_DIR = _get_trace_dir()
 
 class AgentTracer:
     """Core tracer with JSONL persistence and simple in-process span correlation."""
