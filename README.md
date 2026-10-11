@@ -4,7 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/Status-Public%20RC-green)](https://github.com/Goliaith/helixcore)
+[![Status](https://img.shields.io/badge/Status-Dormant-lightgrey)](https://github.com/Goliaith/helixcore)
 [![CI](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml/badge.svg)](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml)
 
 HelixCore is the governance layer that makes serious agentic work reliable. It delivers explicit phase handoffs, durable memory glue (Synaptogenesis), anti-runaway protection, closed-loop self-improvement, health pulses, and a complete local-first stack — all in a small, importable Python package.
@@ -12,6 +12,8 @@ HelixCore is the governance layer that makes serious agentic work reliable. It d
 It works **completely standalone** (zero external dependencies required) or layered on top of LangGraph, CrewAI, LlamaIndex, custom agents, Claude, GPT, or any other model or framework.
 
 > "You bring the LLM calls. HelixCore brings the discipline, memory, and safety."
+
+**Status (2026-10-11):** Dormant personal governance log. This tree includes the 2026-10-11 library fixes: a task slug must be a short token, each synapse pair is one row, and task files follow the configured home. The stress-test numbers below are from June 2026.
 
 ## Tutorials & Getting Started
 
@@ -259,7 +261,7 @@ helixcore/
 
 ## Status
 
-Public release candidate (v0.3.0). Developed and hardened over 5 weeks of intensive internal dogfooding and public-readiness work in June 2026 (extreme stress tests, SRSI cross-study experiments, external usability hardening).
+Dormant personal log (v0.3.0). This tree includes the 2026-10-11 library fixes named at the top. The stress-test numbers in this file are from June 2026.
 
 Contributions and real-world usage reports (especially external/Claude experiences) are very welcome.
 

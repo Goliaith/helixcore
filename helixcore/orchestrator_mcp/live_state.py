@@ -151,6 +151,9 @@ def record_orchestration_decision(decision: str, task_slug: Optional[str] = None
         _save_orchestration_state(state)
 
 def record_phase_handoff(summary: str, next_focus: str = "", task_slug: Optional[str] = None) -> None:
+    if task_slug:
+        from helixcore.local_semantic_memory import require_task_slug
+        task_slug = require_task_slug(task_slug)
     _record_discipline_event("record_phase_handoff", {"summary": summary[:80]}, task_slug=task_slug)
     span_id = _emit_span("phase_handoff", {"summary": summary[:100]}, task_slug=task_slug)
     state = _load_orchestration_state()

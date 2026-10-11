@@ -436,6 +436,8 @@ def persist_decision(
     Preferred (and the only supported path): LocalProjectMemory (files under .grok/state/tasks/) + Cognee.
     to_serena is ignored. Serena has been completely removed.
     """
+    from helixcore.local_semantic_memory import require_task_slug
+    task_slug = require_task_slug(task_slug)
     _record_discipline_event("persist_decision", {"decision": decision[:80]}, task_slug=task_slug)
 
     # Robust trace (works with shim no-op or full)

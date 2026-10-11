@@ -72,7 +72,23 @@ def _get_synaptic_dir() -> Path:
 
 
 def _safe_slug(slug: str) -> str:
+    """Filename form of a slug. Reads of older long names still resolve. New writes use require_task_slug."""
     return re.sub(r"[^a-zA-Z0-9_-]", "_", slug)
+
+
+_SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,59}$")
+
+
+def require_task_slug(slug: str) -> str:
+    """Accept a short token. A sentence belongs in the phase summary, not the slug."""
+    text = (slug or "").strip()
+    if _SLUG_RE.fullmatch(text):
+        return text
+    raise ValueError(
+        "task slug must be a short token of at most 60 characters "
+        "(letters, digits, hyphens, underscores, starting with a letter or digit). "
+        "Put the sentence in the phase summary."
+    )
 
 
 def _mem_path(task_slug: str) -> Path:
@@ -103,6 +119,7 @@ def write_semantic_memory(
     raw append-only history.
     """
     try:
+        task_slug = require_task_slug(task_slug)
         p = _mem_path(task_slug)
         p.parent.mkdir(parents=True, exist_ok=True)
         norm = (content or "").strip()
@@ -134,6 +151,8 @@ def write_semantic_memory(
         with open(p, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
         return True
+    except ValueError:
+        raise
     except Exception:
         return False
 
@@ -320,7 +339,35 @@ def write_synapse(
         "usage_count": 0,
         "metadata": metadata or {},
     }
-    return _append_synapse(entry)
+    try:
+        _upsert_synapse(entry)
+        return True
+    except Exception:
+        return False
+
+
+def _pair_key(entry: Dict[str, Any]):
+    return (entry.get("from"), entry.get("to"))
+
+
+def _upsert_synapse(entry: Dict[str, Any]) -> str:
+    """Insert a (from, to) pair or update that row. A repeat never appends another line."""
+    entries = _load_all_synapses()
+    key = _pair_key(entry)
+    for prev in reversed(entries):
+        if _pair_key(prev) != key:
+            continue
+        prev["strength"] = round(max(float(prev.get("strength") or 0), float(entry["strength"])), 3)
+        prev["last_reinforced"] = entry.get("last_reinforced", time.time())
+        if entry.get("reason") and not prev.get("reason"):
+            prev["reason"] = entry["reason"]
+        if entry.get("metadata"):
+            prev["metadata"] = entry["metadata"]
+        _write_all_synapses(entries)
+        return "updated"
+    entries.append(entry)
+    _write_all_synapses(entries)
+    return "created"
 
 
 def list_synapses(limit: int = 50, min_strength: float = 0.0) -> List[Dict[str, Any]]:
@@ -466,7 +513,10 @@ def perform_synaptogenesis(task_slug: Optional[str] = None, max_new: int = 8) ->
     """
     created = []
     potentials = find_potential_synapses(max_new * 2, task_slug=task_slug)
+    existing_pairs = {_pair_key(e) for e in _load_all_synapses()}
     for p in potentials[:max_new]:
+        key = (p["from"], p["to"])
+        is_new = key not in existing_pairs
         ok = write_synapse(
             from_ref=p["from"],
             to_ref=p["to"],
@@ -476,23 +526,28 @@ def perform_synaptogenesis(task_slug: Optional[str] = None, max_new: int = 8) ->
             created_by="synaptogenesis_pass" + (f"@{task_slug}" if task_slug else ""),
             task_scope="cross" if task_slug is None else task_slug,
         )
-        if ok:
+        if ok and is_new:
             created.append({"from": p["from"], "to": p["to"], "strength": p.get("potential", 0.7)})
-    # Reinforce recent + persist everything efficiently with dedup
-    existing = list_synapses(limit=5, min_strength=0.4)
-    reinforced = 0
-    for e in existing:
-        e["strength"] = min(1.0, e.get("strength", 0.5) + 0.05)
-        e["last_reinforced"] = time.time()
-        e["usage_count"] = e.get("usage_count", 0) + 1
-        reinforced += 1
-    # write_synapse() already persisted each created synapse above; do NOT re-append a
-    # duplicate copy (that was the source of paired federation+auto bloat). Reload the
-    # store (which now includes the created entries) and append reinforced updates only.
+            existing_pairs.add(key)
+    # Reinforce recent pairs by editing the row. Do not append a second copy.
     all_entries = _load_all_synapses()
-    for e in existing:
-        all_entries.append(e)
-    _write_all_synapses(all_entries)
+    latest: Dict[tuple, Dict[str, Any]] = {}
+    for e in all_entries:
+        if float(e.get("strength") or 0) < 0.4:
+            continue
+        key = _pair_key(e)
+        if key not in latest or float(e.get("ts") or 0) >= float(latest[key].get("ts") or 0):
+            latest[key] = e
+    ranked = sorted(latest.values(), key=lambda e: float(e.get("ts") or 0), reverse=True)[:5]
+    reinforced = 0
+    now = time.time()
+    for e in ranked:
+        e["strength"] = round(min(1.0, float(e.get("strength") or 0.5) + 0.05), 3)
+        e["last_reinforced"] = now
+        e["usage_count"] = int(e.get("usage_count") or 0) + 1
+        reinforced += 1
+    if all_entries:
+        _write_all_synapses(all_entries)
     total_now = len(list_synapses())  # after dedup
     return {
         "new_synapses": len(created),
@@ -500,7 +555,7 @@ def perform_synaptogenesis(task_slug: Optional[str] = None, max_new: int = 8) ->
         "reinforced": reinforced,
         "total_synapses": total_now,
         "task_scope": task_slug or "cross",
-        "note": "Integrated for peak efficiency. Synapses are first-class, deduped, pruned, and auto-persisted.",
+        "note": "New pairs are inserted once. Reinforcement updates that row.",
     }
 
 
@@ -544,38 +599,30 @@ def prune_synapses(max_mb: float = 5.0, min_strength: float = 0.25, dry_run: boo
 
 
 def reinforce_synapse(from_ref: str, to_ref: str, delta: float = 0.05) -> bool:
-    """Reinforce an existing synapse on use (for peak efficiency: surfacing/using strengthens connections).
-    Appends reinforced entry; list dedups to latest.
-    """
+    """Strengthen the existing (from, to) row. A repeat does not append another line."""
     try:
-        entry = {
-            "ts": time.time(),
+        all_e = _load_all_synapses()
+        now = time.time()
+        for e in reversed(all_e):
+            if e.get("from") == from_ref and e.get("to") == to_ref:
+                e["strength"] = round(min(1.0, float(e.get("strength") or 0.5) + delta), 3)
+                e["last_reinforced"] = now
+                e["usage_count"] = int(e.get("usage_count") or 0) + 1
+                _write_all_synapses(all_e)
+                return True
+        all_e.append({
+            "ts": now,
             "from": from_ref,
             "to": to_ref,
-            "strength": 0.5,  # will be adjusted from existing
+            "strength": round(min(1.0, 0.5 + delta), 3),
             "type": "reinforced",
             "reason": "Reinforced on use/surface in briefing or recall",
             "created_by": "reinforce_synapse",
             "task_scope": "cross",
-            "last_reinforced": time.time(),
+            "last_reinforced": now,
             "usage_count": 1,
-            "metadata": {}
-        }
-        # To properly reinforce, load and boost the latest
-        all_e = _load_all_synapses()
-        found = False
-        for e in reversed(all_e):
-            if e.get("from") == from_ref and e.get("to") == to_ref:
-                e["strength"] = min(1.0, e.get("strength", 0.5) + delta)
-                e["last_reinforced"] = time.time()
-                e["usage_count"] = e.get("usage_count", 0) + 1
-                found = True
-                break
-        if not found:
-            entry["strength"] = 0.5 + delta
-            all_e.append(entry)
-        else:
-            all_e.append(entry)  # append the updated for history
+            "metadata": {},
+        })
         _write_all_synapses(all_e)
         return True
     except Exception:

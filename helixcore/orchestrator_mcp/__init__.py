@@ -379,8 +379,9 @@ def quick_milestone(task_slug: str, content: str, **kwargs):
         return record_phase_handoff(summary=content, task_slug=task_slug, **kwargs)
 
 # LocalProjectMemory helpers (added for top-level re-exports in helixcore/__init__.py)
-LOCAL_TASKS_DIR = STATE_DIR / "tasks"
-LOCAL_TASKS_DIR.mkdir(parents=True, exist_ok=True)
+def _tasks_root() -> Path:
+    """Task files follow the latest configure() call, not the path captured at import."""
+    return get_state_dir() / "tasks"
 
 def _local_memory_path(task_slug: str, category: str) -> Path:
     safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '_', task_slug)
@@ -388,11 +389,13 @@ def _local_memory_path(task_slug: str, category: str) -> Path:
     if "/" in cat:
         cat = cat.split("/")[-1]
     safe_cat = re.sub(r'[^a-zA-Z0-9_-]', '_', cat)
-    return LOCAL_TASKS_DIR / safe_slug / f"{safe_cat}.json"
+    return _tasks_root() / safe_slug / f"{safe_cat}.json"
 
 def write_local_memory(task_slug: str, category: str, content: str, to_cognee: bool = True) -> bool:
     """Write project memory locally (primary)."""
     try:
+        from helixcore.local_semantic_memory import require_task_slug
+        task_slug = require_task_slug(task_slug)
         p = _local_memory_path(task_slug, category)
         p.parent.mkdir(parents=True, exist_ok=True)
         data = {"content": content, "ts": time.time(), "category": category}
@@ -408,6 +411,8 @@ def write_local_memory(task_slug: str, category: str, content: str, to_cognee: b
                 pass
 
         return True
+    except ValueError:
+        raise
     except Exception:
         return False
 
@@ -425,7 +430,7 @@ def read_local_memory(task_slug: str, category: str) -> Optional[str]:
 def list_local_memories(task_slug: str) -> List[str]:
     """List available memory categories for a task."""
     try:
-        d = LOCAL_TASKS_DIR / re.sub(r'[^a-zA-Z0-9_-]', '_', task_slug)
+        d = _tasks_root() / re.sub(r'[^a-zA-Z0-9_-]', '_', task_slug)
         if d.exists():
             return [f.stem for f in d.glob("*.json")]
     except Exception:

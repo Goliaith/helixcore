@@ -8,9 +8,9 @@ These lock in behavior that was previously broken and manually verified:
      demo clusters are strictly opt-in (HELIXCORE_DEMO_SYNAPSES=1) and suppressed
      whenever any real candidate exists.
 
-  2. `perform_synaptogenesis()` no longer double-persists each created synapse
-     (the old federation+auto paired write that bloated the file). Invariant:
-     raw synapse lines == new_synapses + reinforced.
+  2. `perform_synaptogenesis()` no longer double-persists each created synapse,
+     and reinforcement edits the existing row. Invariant: raw synapse lines ==
+     new_synapses, and a second pass adds no lines.
 
   3. `write_semantic_memory(dedup=True)` (default) collapses identical-content
      writes by refreshing recency in place instead of appending a redundant row;
@@ -118,9 +118,8 @@ class TestSynaptogenesisDiscovery:
 # ===========================================================================
 class TestPerformSynaptogenesis:
     def test_no_duplicate_write_invariant(self, store):
-        """Each created synapse is persisted exactly once; reinforced updates are
-        appended once. Raw line count must equal new_synapses + reinforced.
-        The old paired federation+auto write violated this (created written twice).
+        """Each created synapse is one row. Reinforcement edits that row.
+        A second pass must not append another line.
         """
         lsm.write_semantic_memory("slug-a", _OVERLAP_A)
         lsm.write_semantic_memory("slug-b", _OVERLAP_B)
@@ -128,7 +127,22 @@ class TestPerformSynaptogenesis:
 
         assert result["new_synapses"] >= 1
         raw = _raw_synapse_lines()
-        assert len(raw) == result["new_synapses"] + result["reinforced"]
+        assert len(raw) == result["new_synapses"]
+        second = lsm.perform_synaptogenesis(task_slug="slug-a")
+        assert second["new_synapses"] == 0
+        assert len(_raw_synapse_lines()) == len(raw)
+        again = lsm.reinforce_synapse(raw[0]["from"], raw[0]["to"])
+        assert again is True
+        assert len(_raw_synapse_lines()) == len(raw)
+
+    def test_paragraph_slug_is_rejected(self, store):
+        """A sentence must not become a memory directory."""
+        with pytest.raises(ValueError):
+            lsm.write_semantic_memory(
+                "Phase 5 polity harbor mill yard is live and this is a sentence",
+                "should not be stored",
+            )
+        assert list(store.rglob("memories.jsonl")) == []
 
     def test_pass_writes_no_example_nodes(self, store):
         """A pass over real slugs must only connect real slugs — no demo endpoints."""

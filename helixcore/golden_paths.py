@@ -112,6 +112,9 @@ def begin_governed_work(
         The result of the first disciplined_orchestration_turn, including
         project_context_briefing, recommendations, router_heuristic, and power_router_hint (for escalation to powerful models).
     """
+    from .local_semantic_memory import require_task_slug
+    task_slug = require_task_slug(task_slug)
+
     if auto_activate_initiative:
         set_initiative_mode(task_slug, "disciplined", source="explicit")
 
