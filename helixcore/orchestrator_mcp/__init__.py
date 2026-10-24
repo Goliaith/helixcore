@@ -82,36 +82,6 @@ from .governance import (
     capture_milestone,
     transition_phase,
 )
-from .anti_runaway import (
-    normalize_issue_signature,
-    signature_similarity,
-    track_fix_attempt,
-    should_trigger_help_mode,
-    help_mode_handoff,
-    track_token_usage,
-    get_budget_usage,
-    get_budget_policy,
-    check_budget_policy,
-    compute_chemotaxis_gradients,
-    dream_refine_gradients,
-    simulate_internal_market_bids,
-    allocate_via_market,
-    combine_chemotaxis_market,
-    rotate_traces,
-    prune_traces_if_needed,
-    rotate_governance_log,
-    rotate_discipline_log,
-)
-from .nudges import (
-    NUDGE_CATEGORIES,
-    suppress_nudge_category,
-    unsuppress_nudge_category,
-    get_nudge_preferences,
-    _process_recommendations,
-    _tag_recommendation,
-    _score_recommendation,
-)
-
 # Synaptogenesis automatic wiring (full live core parity at orchestrator_mcp level)
 # All 6 traits now imported and re-exported so `from helixcore.orchestrator_mcp import prune_synapses, find_potential_synapses, ...` works.
 try:
@@ -233,12 +203,6 @@ def disciplined_orchestration_turn(
     if mode not in ORCHESTRATION_MODES:
         mode = DEFAULT_ORCHESTRATION_MODE
 
-    # Auto-create lightweight session so everything else has a place to write
-    try:
-        ensure_lightweight_active_session(task_slug, initial_focus=current_focus)
-    except Exception:
-        pass
-
     briefing = ""
     try:
         briefing = synthesize_project_context_briefing(task_slug)
@@ -258,7 +222,6 @@ def disciplined_orchestration_turn(
     recs = []
     if mode in ("strong_standard", "disciplined"):
         recs.append("Use record_phase_handoff() and persist_decision() for long-running work.")
-        recs.append("Consider perform_synthesis() when you have several related efforts.")
 
     # Automatic Synaptogenesis (the behavior that was missing in the public shim)
     # For strong modes, auto-grow the synapse graph at the start of the turn.
@@ -282,32 +245,6 @@ def disciplined_orchestration_turn(
     }
     return result
 
-# ------------------------------------------------------------------
-# Remaining names imported by golden_paths (provide working shims / delegates)
-# ------------------------------------------------------------------
-def save_checkpoint(name: str = "", summary: str = "", task_slug: Optional[str] = None, **kw) -> dict:
-    try:
-        return {"saved": True, "name": name or "checkpoint", "task_slug": task_slug}
-    except Exception:
-        return {"saved": False}
-
-def get_related_efforts(slug: str, max_depth: int = 2) -> list:
-    try:
-        return get_related_efforts(slug, max_depth)  # may be provided by live_state re-export
-    except Exception:
-        return []
-
-def link_related_sessions(parent: str, children: list, relationship: str = "related") -> dict:
-    return {"linked": True, "parent": parent, "children": children or [], "relationship": relationship}
-
-def run_system_coherence_audit(include_registry: bool = True, task_slug: Optional[str] = None) -> Dict[str, Any]:
-    return {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "type": "system_coherence_audit",
-        "health_pulse": None,
-        "recommendations": [],
-    }
-
 def pulse_agent_health(include_registry: bool = True) -> Dict[str, Any]:
     return {
         "active_session_count": len(list_active_orchestrations()),
@@ -316,67 +253,11 @@ def pulse_agent_health(include_registry: bool = True) -> Dict[str, Any]:
         "standalone": True,
     }
 
-def set_initiative_mode(task_slug: str, mode: str = "disciplined", source: str = "explicit") -> bool:
-    try:
-        return set_initiative_mode(task_slug, mode, source)  # delegate if present
-    except Exception:
-        # Fallback: directly manipulate the state file (works in standalone)
-        try:
-            st = _load_orchestration_state()
-            if task_slug not in st.get("active_sessions", {}):
-                ensure_lightweight_active_session(task_slug)
-            st["active_sessions"][task_slug]["initiative_mode"] = mode if mode else None
-            _save_orchestration_state(st)
-            return True
-        except Exception:
-            return False
-
 def record_discipline_event(event: str, details: dict = None, task_slug: Optional[str] = None) -> None:
-    # No-op in minimal external shim (full impl records to local discipline log)
     pass
-
-def ensure_lightweight_active_session(task_slug: str, initial_focus: str = "") -> None:
-    # Re-export / local impl already imported above; keep a safe wrapper
-    try:
-        ensure_lightweight_active_session(task_slug, initial_focus)
-    except NameError:
-        # If the from .live_state didn't bind it for some reason, do a direct minimal write
-        st = _load_orchestration_state()
-        if task_slug not in st.get("active_sessions", {}):
-            now = datetime.now(timezone.utc).isoformat()
-            st.setdefault("active_sessions", {})[task_slug] = {
-                "safety_id": f"shim-{task_slug[:20]}",
-                "started_at": now,
-                "last_heartbeat": now,
-                "current_focus": initial_focus or "shim session",
-                "key_decisions": [],
-                "phase_handoffs": [],
-                "_lightweight": True,
-            }
-            _save_orchestration_state(st)
 
 def is_standalone_mode() -> bool:
     return True
-
-# ------------------------------------------------------------------
-# Small ergonomic shims expected by various call sites
-# ------------------------------------------------------------------
-def record_simple_decision(task_slug: str, decision: str, **kwargs) -> str:
-    return persist_decision(task_slug=task_slug, decision=decision, **kwargs)
-
-def heartbeat(task_slug: str = None, **kwargs) -> bool:
-    try:
-        if task_slug:
-            heartbeat_orchestration_state(task_slug)
-        return True
-    except Exception:
-        return True
-
-def quick_milestone(task_slug: str, content: str, **kwargs):
-    try:
-        return capture_milestone(task_slug=task_slug, summary=content, **kwargs)
-    except Exception:
-        return record_phase_handoff(summary=content, task_slug=task_slug, **kwargs)
 
 # LocalProjectMemory helpers (added for top-level re-exports in helixcore/__init__.py)
 def _tasks_root() -> Path:
@@ -437,169 +318,25 @@ def list_local_memories(task_slug: str) -> List[str]:
         pass
     return []
 
-# Additional high-level shims for names re-exported at the top-level helixcore/__init__.py
-# These make 'import helixcore' succeed when the package is installed from the Git repo.
-def create_recovery_point(task_slug: str, name: str = "", summary: str = "", **kwargs):
-    return {"status": "created", "task_slug": task_slug, "name": name or "auto-recovery", "summary": summary}
-
-def safe_experiment(task_slug: str, **kwargs):
-    return {"status": "safe", "task_slug": task_slug}
-
-def list_checkpoints(task_slug: Optional[str] = None):
-    return []
-
-def time_travel_replay(checkpoint: str, approved: bool = False, **kwargs):
-    return {"replayed": True, "checkpoint": checkpoint, "approved": approved}
-
-def get_checkpoint_review(checkpoint: Optional[str] = None):
-    return {}
-
-def restore_checkpoint(checkpoint: str, **kwargs):
-    return {"restored": True, "checkpoint": checkpoint}
-
-def generate_local_observability_report(**kwargs):
-    return {"report": "local-only", "note": "shim for external package"}
-
-def generate_clean_distributable(**kwargs):
-    return {"distributable": True}
-
-def synthesize_external_handoff(**kwargs):
-    return {}
-
-def apply_distribution_policy(**kwargs):
-    return {}
-
-def get_orchestration_state(task_slug: str):
-    return {"active": False, "task_slug": task_slug}
-
-def update_orchestration_focus(new_focus: str, task_slug: Optional[str] = None):
-    return True
-
-def archive_stale_sessions(max_age_hours: int = 72, **kwargs):
-    return 0
-
-def force_flush_orchestration_state(**kwargs):
-    return True
-
-def list_phase3_capabilities(include_examples: bool = False):
-    return {
-        "capabilities": [
-            "capture_milestone", "record_phase_handoff", "persist_decision",
-            "begin_governed_work", "perform_synthesis", "record_phase3_usage"
-        ],
-        "include_examples": include_examples,
-        "note": "shim - full list in source"
-    }
-
-def record_phase3_usage(event: str, details: dict = None, force_record: bool = False, **kw):
-    return None
-
-def get_phase3_adoption_report():
-    return {"adoption": "shim", "events": 0}
-
-def get_evaluation_harness(task_slug: Optional[str] = None):
-    class _Shim:
-        def register_case(self, *a, **k): pass
-        def run_case(self, *a, **k): return {"passed": True, "score": 1.0}
-        def list_cases(self, *a, **k): return []
-        def summarize(self, *a, **k): return {"pass_rate": 1.0}
-    return _Shim()
-
-def get_evaluation_harness(task_slug: Optional[str] = None):  # safe duplicate
-    class _Shim:
-        def register_case(self, *a, **k): pass
-        def run_case(self, *a, **k): return {"passed": True, "score": 1.0}
-    return _Shim()
-
-# ------------------------------------------------------------------
-# Live core parity shims (closed-loop / evaluation / advanced surface)
-# These provide working (or informative) implementations so external users
-# get closer behavioral match to the full live orchestrator_mcp.
-# ------------------------------------------------------------------
-def run_what_if_for_proposal(proposal: dict, **kwargs) -> dict:
-    return {
-        "proposal": proposal,
-        "what_if_result": "shim (full simulation in live core)",
-        "risk_delta": 0.0,
-        "note": "Public shim; richer what-if + governance_gate in internal live core."
-    }
-
-def apply_closed_loop_improvement(proposal: dict, approved: bool = False, **kwargs) -> dict:
-    return {
-        "applied": approved,
-        "proposal": proposal,
-        "note": "Public shim; full closed-loop apply + golden case registration in live core."
-    }
-
-def run_what_if_experiment(*a, **k):
-    return {"experiment": "shim", "result": "see run_what_if_for_proposal"}
-
-def propose_golden_cases_from_failures(*a, **k):
-    return []
-
-def register_core_golden_cases(*a, **k):
-    return {"registered": 0, "note": "shims in public; full in live"}
-
-def run_evaluation_suite(*a, **k):
-    return {"pass_rate": 1.0, "note": "shim harness; see get_evaluation_harness"}
-
-# ------------------------------------------------------------------
 __all__ = [
     "disciplined_orchestration_turn",
     "persist_decision",
     "record_phase_handoff",
-    "save_checkpoint",
+    "capture_milestone",
     "synthesize_project_context_briefing",
-    "get_related_efforts",
-    "link_related_sessions",
-    "run_system_coherence_audit",
+    "disciplined_recall",
     "pulse_agent_health",
-    "set_initiative_mode",
-    "ensure_lightweight_active_session",
-    "record_discipline_event",
     "get_status_report",
     "configure",
     "is_standalone_mode",
-    "record_simple_decision",
-    "heartbeat",
-    "quick_milestone",
     "write_local_memory",
     "read_local_memory",
     "list_local_memories",
-    "create_recovery_point",
-    "safe_experiment",
-    "list_checkpoints",
-    "time_travel_replay",
-    "get_checkpoint_review",
-    "restore_checkpoint",
-    "generate_local_observability_report",
-    "generate_clean_distributable",
-    "synthesize_external_handoff",
-    "apply_distribution_policy",
     "get_orchestration_state",
-    "update_orchestration_focus",
-    "archive_stale_sessions",
-    "force_flush_orchestration_state",
-    "list_phase3_capabilities",
-    "record_phase3_usage",
-    "get_phase3_adoption_report",
-    "get_evaluation_harness",
-    # Full Synaptogenesis traits at orchestrator_mcp level (live core parity)
     "perform_synaptogenesis",
     "reinforce_synapse",
     "list_synapses",
     "write_synapse",
     "prune_synapses",
     "find_potential_synapses",
-    # Closed-loop / evaluation parity shims
-    "run_what_if_for_proposal",
-    "apply_closed_loop_improvement",
-    "run_what_if_experiment",
-    "propose_golden_cases_from_failures",
-    "register_core_golden_cases",
-    "run_evaluation_suite",
 ]
-
-# End of full-enough orchestrator_mcp package for public/external use.
-# All Synaptogenesis traits (the 6 core functions + auto formation on turns/persists/handoffs) are now at this level.
-# Additional closed-loop and advanced surface names have working shims for better live-core parity.

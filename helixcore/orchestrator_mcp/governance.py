@@ -191,14 +191,6 @@ def disciplined_recall(
             except Exception:
                 result["code_intel"] = {"available": False, "error": "light retrieval failed"}
 
-        # --- Power Router hint (new high-value capability) ---
-        # If the caller wants power, the router can be invoked separately with governed_power_call
-        # This recall can surface a router_heuristic for the orchestrator to decide escalation.
-        result["power_router_hint"] = {
-            "available": True,
-            "note": "Use route_capability() or governed_power_call() for intelligent escalation to frontier models (Grok, Claude, GPT) while keeping full governance, memory injection, and outcome learning. See power_router module."
-        }
-
         # --- Project memory glue: automatically surface recent phase handoffs from live state ---
         try:
             live = _get_live_orchestration_state()

@@ -54,39 +54,8 @@ for m in mems:
     print("  -", content)
 print()
 
-# 3. Governance primitives
-print("--- 3. GOVERNANCE STATE ---")
-try:
-    orch = hc.get_orchestration_state(task)
-    print("Orchestration state for task:", orch)
-except Exception as e:
-    print("get_orchestration_state err (expected if no prior):", str(e)[:120])
-
-try:
-    cps = hc.list_checkpoints(task)
-    print("Checkpoints:", cps)
-except Exception as e:
-    print("list_checkpoints:", str(e)[:80])
-
-try:
-    harness = hc.get_evaluation_harness()
-    print("Evaluation harness available:", bool(harness))
-except Exception as e:
-    print("Evaluation harness:", str(e)[:80])
-print()
-
-# 4. Local stack health
-print("--- 4. LOCAL STACK ---")
-try:
-    overview = hc.get_code_overview(r"E:\AI\Projects\helixcore\helixcore")
-    print("LocalCodeIntel overview (first 400 chars):")
-    print(str(overview)[:400] if overview else "None")
-except Exception as e:
-    print("LocalCodeIntel:", e)
-print()
-
-# 5. Golden paths
-print("--- 5. GOLDEN PATHS ---")
+# 3. Golden paths
+print("--- 3. GOLDEN PATHS ---")
 paths = hc.list_golden_paths()
 for p in paths:
     print(f"  - {p.get('name')}: {p.get('recommended_for', '')[:60]}")

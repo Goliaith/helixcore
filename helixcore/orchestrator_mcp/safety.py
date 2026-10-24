@@ -180,19 +180,19 @@ print(get_status_report(friendly={friendly}))
         return (
             "Great news — running in standalone / external packaged mode.\n\n"
             "**Safety status:** No external Loop Safety Registry detected (loop_guard/loop_registry not found in SAFETY_DIR).\n"
-            "Local governance (anti-runaway primitives, budget checks, Help Mode, discipline enforcement) are still active inside this HelixCore package.\n\n"
+            "Phase handoffs, local memory, and health pulses still run inside this package.\n\n"
             "**What this means for you:** You are using the portable helixcore library outside a full grok-build environment. "
-            "Long-running work will not be centrally registered for runaway protection unless you point HELIXCORE_SAFETY_DIR or install the safety scripts. "
-            "Core patterns (phase handoffs, memory glue, pulses, closed-loop self-improvement) work fully.\n\n"
-            "To enable full registry: copy or symlink the safety/ directory from a grok-build installation, "
+            "Long-running work is not registered with an external loop registry unless HELIXCORE_SAFETY_DIR points at those scripts. "
+            "The daily path is begin, handoff, decide, recall, briefing, milestone, and pulse.\n\n"
+            "To enable the external registry: copy or symlink the safety/ directory from a grok-build installation, "
             "or set the HELIXCORE_SAFETY_DIR environment variable before importing helixcore.\n"
-            "(This is the ideal state for many external / library-only use cases — full power with minimal host dependencies.)"
+            "(This is the usual state for library-only use.)"
         )
     else:
         return json.dumps({
             "mode": "standalone",
             "registry": "unavailable",
-            "note": "No external loop_registry. Local anti-runaway and governance features remain functional."
+            "note": "No external loop_registry. Phase handoffs, local memory, and pulses still run."
         }, indent=2)
 
 __all__ = [
