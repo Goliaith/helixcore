@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "helixcore"
 version = "0.3.0"
-description = "Portable governed agentic patterns for disciplined, observable, self-improving AI workflows. Works standalone or on top of LangGraph, CrewAI, Claude, custom agents, etc."
+description = "Local journal for agent sessions: a task note, a keyword log, and links between tasks. You bring the model."
 readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "MrSilhouette"}]
 requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 7 - Inactive",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -28,7 +28,7 @@ dev = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/Goliaith/helixcore"
-Documentation = "https://github.com/Goliaith/helixcore/tree/main/docs"
+Documentation = "https://github.com/Goliaith/helixcore#readme"
 
 [tool.setuptools.packages.find]
 where = ["."]

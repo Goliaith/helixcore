@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""HelixCore System Analysis Diagnostic Script
+"""Local diagnostic for one machine's HelixCore state folder.
+
+The package is the journal described in README.md.
 Run with: py E:\AI\Projects\helixcore\helixcore_diag.py
 """
 import sys

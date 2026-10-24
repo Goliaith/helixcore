@@ -1,3 +1,5 @@
+> **7 June 2026 record.** The scores and checklist below describe that day's tree. The package on `main` is the local journal in the [README](../README.md).
+
 # HelixCore Public Readiness Summary
 **Date**: 2026-06-07  
 **Context**: Live Agent Health Pulse + Public Deployment Hardening pass (system-health-check-2026-06-07 + follow-on work)  

@@ -2,6 +2,8 @@
 title: Performance Analysis - HelixCore vs. Raw Ungoverned Loops
 ---
 
+> **June 2026 record.** The package on `main` is a local journal: a task note, a keyword log, and links between tasks. This writeup describes an older stack. The current API is the [README](../README.md).
+
 # HelixCore Performance Analysis
 
 **Head-to-head comparison under realistic abusive conditions** (the "Ultimate" stress test used throughout the project's 5-week intensive internal dogfooding and extreme stress validation).

@@ -1,226 +1,126 @@
 # HelixCore
 
-**Portable, governed agentic patterns for disciplined, observable, and self-improving AI workflows.**
+**A local journal for agent sessions.**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Status](https://img.shields.io/badge/Status-Dormant-lightgrey)](https://github.com/Goliaith/helixcore)
 [![CI](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml/badge.svg)](https://github.com/Goliaith/helixcore/actions/workflows/ci.yml)
 
-HelixCore is the journal Claude uses every day: a governed start, phase handoffs, decisions, keyword memory, and synaptogenesis. It is a small standalone Python package. You bring the model calls.
+HelixCore records three things on disk and leaves the model calls to you:
 
-**Status (2026-10-24):** Dormant personal log, trimmed to that daily path. A task slug must be a short token, each synapse pair is one row, and task files follow the configured home. The June 2026 stress-test writeup in `docs/` describes machinery this tree no longer includes.
+1. A task note for the current slug.
+2. A keyword log you can search later.
+3. Links between slugs whose notes overlap.
 
-## Tutorials
+It is a small Python package, version 0.3.0, with no required services. Set `HELIXCORE_HOME` before import and every write stays in that folder.
 
-The guides under `docs/` were written in June 2026 and describe a larger stack than this tree. The usage block below matches the code as of the 2026-10-24 trim.
+**Status (2026-10-24):** Dormant. The tree on `main` is this journal. Guides and measurements from June 2026 live under `docs/` and describe an older, larger stack.
 
-## Installation (No Pre-built Wheel Required)
-
-The repo contains **everything** needed for a clean source install.
-
-### Recommended (most reliable, especially on Windows)
+## Install
 
 ```powershell
-# 1. Clone
 git clone https://github.com/Goliaith/helixcore.git
 cd helixcore
-
-# 2. Install from the local clone (avoids git+ / Python-launcher issues)
 python -m pip install .
-
-# 3. Verify
-python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
 ```
 
-### Editable (best for development)
-
-```bash
-git clone https://github.com/Goliaith/helixcore.git
-cd helixcore
-pip install -e .
+```powershell
+$env:HELIXCORE_HOME = "C:\tmp\my-project"
+python -c "import helixcore; print(helixcore.__version__, helixcore.get_home())"
 ```
 
-After install you can point state anywhere:
+`configure(home=...)` after import moves task files and the keyword log. Set `HELIXCORE_HOME` before import when you also care about the session file path.
+
+Python 3.10 or newer. pytest is optional and only used for `tests/`.
+
+## What a session stores
+
+| Call | File |
+|---|---|
+| `begin_governed_work` | `tasks/<slug>/current.json` — the opening sentence |
+| `persist_decision` | `tasks/<slug>/<category>.json` — latest text in that category |
+| `write_semantic_memory` | `semantic/<slug>/memories.jsonl` — append, with exact-text dedup |
+| `perform_synaptogenesis` | `synaptic/synapses.jsonl` — one row per ordered pair |
+
+Paths are under `$HELIXCORE_HOME/.grok/state/`.
+
+A slug is a short token: letters, digits, hyphens, underscores, at most 60 characters, starting with a letter or digit. Put the sentence in the note, not the slug.
+
+`semantic_search` scores one slug. Keyword overlap is three quarters of the score and recency is one quarter. Recency reaches zero around 90 days. Words of one or two letters are skipped.
+
+`perform_synaptogenesis` links two slugs when their keyword sets overlap by at least 0.12. Each pass also adds 0.05 strength, capped at 1.0, to the five newest rows. `persist_decision` runs that pass twice. Modes `strong_standard` and `disciplined` run it once more from the opening turn. `list_synapses` returns at most 50 rows.
+
+`record_phase_handoff` writes the session file only when that file already has an active session. `begin_governed_work` does not create one. `pulse_agent_health` reports health `ok` and zero sessions. `get_status_report` describes this local journal.
+
+## Use
 
 ```python
-from helixcore import configure
-configure(home="/tmp/my-claude-project")   # or set HELIXCORE_HOME before import
-```
+import os
+os.environ["HELIXCORE_HOME"] = "/tmp/my-project"
 
-See the [30-minute tutorial](docs/HELIXCORE_IN_30_MINUTES.md) for the fastest hands-on experience.
-
-## What the package does
-
-- `begin_governed_work` writes `tasks/<slug>/current.json` with the opening sentence.
-- `persist_decision` overwrites `tasks/<slug>/<category>.json`. `write_semantic_memory` appends the keyword log.
-- `record_phase_handoff` updates the session file when an active session already exists. The daily start does not create that session.
-- `disciplined_recall` reads the task files. `semantic_search` scores one slug's keyword log by overlap and recency.
-- `perform_synaptogenesis` links slugs whose keyword sets overlap, then refreshes the five newest rows.
-- `pulse_agent_health` and `get_status_report` report the local store.
-
-`docs/ULTIMATE_STRESS_TEST.md` is the June 2026 record of a larger stack. That stack is not in this tree.
-
-## Authorship & Immutable Signing
-
-This project is created and maintained by **MrSilhouette**.
-
-The name **"MrSilhouette" is permanently locked** as the canonical author and copyright holder. It is explicitly recorded in:
-
-- LICENSE ("Copyright (c) 2026 MrSilhouette")
-- pyproject.toml (authors)
-- This README
-- Every commit message via the required `Signed-off-by: MrSilhouette ...` trailer
-
-**It is not allowed to be removed.**
-
-All commits must be GPG-signed. See [CONTRIBUTING.md](CONTRIBUTING.md) for the exact rules and GitHub branch protection settings.
-
-## Features
-
-Kept because Claude calls them on ordinary sessions:
-
-- **Governed start** — `begin_governed_work()` writes the opening task file. Strong and disciplined modes also run synaptogenesis.
-- **Decisions** — `persist_decision()` overwrites `tasks/<slug>/<category>.json`.
-- **Keyword log** — `write_semantic_memory()` appends a line. `semantic_search()` scores that slug.
-- **Handoffs** — `record_phase_handoff()` writes into an existing session. `capture_milestone()` calls that path.
-- **Recall** — `disciplined_recall()` reads `current`, `decisions`, and `phases`.
-- **Synaptogenesis** — `perform_synaptogenesis()` links slugs when their memory overlaps. A pass forms a limited number of new pairs and refreshes five existing rows.
-- **Pulse and status** — `pulse_agent_health()`, `get_status_report()`. `configure()` and `HELIXCORE_HOME` choose the state directory.
-
-## Live surface
-
-After `pip install .` the import exposes the list above. Strong and disciplined turns still call synaptogenesis. There is no code-intel module, no vector store, no evaluation harness, no checkpoint or time-travel API, and no model router in this tree.
-
-## Quick Usage Example
-
-```python
 from helixcore import (
     begin_governed_work,
-    record_phase_handoff,
     persist_decision,
-    pulse_agent_health,
+    write_semantic_memory,
+    semantic_search,
     get_status_report,
-    configure,
 )
 
-# Point everything at an isolated folder (perfect for Claude-only or per-project use)
-configure(home="/tmp/my-project")
-
-result = begin_governed_work(
-    task_slug="build-feature-x-with-claude",
-    initial_focus="Implement the new parser + tests using Claude 3.5",
-    mode="standard"   # "light" | "standard" | "strong_standard" | "disciplined"
+begin_governed_work(
+    "parser-work",
+    "Implement the parser and its tests.",
+    mode="light",
 )
-
-# ... your normal work calling any LLM ...
-
-record_phase_handoff(
-    "Design and initial implementation complete.",
-    next_focus="Evaluation + error analysis",
-    task_slug="build-feature-x-with-claude"
+write_semantic_memory(
+    "parser-work",
+    "Chose recursive descent because the edge cases stayed readable.",
 )
-
 persist_decision(
-    "build-feature-x-with-claude",
-    "Chose recursive descent parser over regex because it handles the edge cases cleanly.",
-    category="implementation"
+    "parser-work",
+    "Chose recursive descent because the edge cases stayed readable.",
+    category="implementation",
 )
-
+for hit in semantic_search("parser-work", "recursive descent", limit=3):
+    print(hit["score"], hit["content"])
 print(get_status_report(friendly=True))
-print(pulse_agent_health()["active_session_count"])
 ```
 
-## Semantic Memory & Synapse Data (Included)
+`examples/simple_claude_dogfood.py` runs the same start, a handoff call, a decision, and a pulse.
 
-Ships with real sample data from the 5-week work under `examples/semantic/` and `examples/synaptic/`. Explore immediately after install:
+`list_golden_paths()` returns one entry: `begin_governed_work`.
 
-```python
-from helixcore.local_semantic_memory import list_semantic_memories, semantic_search, list_synapses, perform_synaptogenesis
-
-print(list_semantic_memories("helixcore-memory-coherence-upgrades", limit=2))
-print(semantic_search("external-dogfood-2026-06-07", "standalone safety", limit=2))
-print(list_synapses(limit=3))
-```
-
-Full logic lives in `helixcore/local_semantic_memory.py` (pure local JSONL + Synaptogenesis).
-
-## Helpful Commands & One-Liners
-
-### Verify
-```bash
-python -c "from helixcore import begin_governed_work, pulse_agent_health, get_status_report, configure, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
-```
-
-### Friendly health (standalone)
-```bash
-python -c "from helixcore import get_status_report; print(get_status_report(friendly=True))"
-```
-
-### Isolated state (recommended for external use)
-```powershell
-$env:HELIXCORE_HOME = "C:\tmp\my-claude-project"
-python -c "from helixcore import begin_governed_work, get_status_report; ... ; print(get_status_report(friendly=True))"
-```
-
-### Start governed work + handoff + decision
-```python
-from helixcore import begin_governed_work, record_phase_handoff, persist_decision
-
-begin_governed_work("demo", "Quick demo", mode="light")
-record_phase_handoff("Step 1 done", "Next", "demo")
-persist_decision("demo", "Chose light mode for this demo.")
-```
-
-### List Golden Paths
-```python
-from helixcore import list_golden_paths
-for p in list_golden_paths(): print(p["name"], "-", p.get("recommended_for", ""))
-```
-
-### Run external example
-```bash
-python examples/simple_claude_dogfood.py
-```
-
-## External / Public Readiness
-
-Hardened for use outside any host environment:
-- Clean `import helixcore` from source or `pip install .`
-- `configure()` + env vars for complete path control
-- Graceful standalone safety shims + friendly `get_status_report()`
-- Validated in isolated venvs (PYTHONPATH + custom HOME only)
-
-`import helixcore` works from a clean `pip install .`. Point `HELIXCORE_HOME` at the state directory you want.
-
-## Project Structure
+## Layout
 
 ```
 helixcore/
 ├── helixcore/
-│   ├── __init__.py
 │   ├── golden_paths.py            # begin_governed_work
-│   ├── local_semantic_memory.py   # keyword memory + synaptogenesis
-│   └── orchestrator_mcp/          # handoffs, decisions, pulse, status
-├── docs/
+│   ├── local_semantic_memory.py   # keyword log and synapses
+│   └── orchestrator_mcp/          # decisions, recall, pulse, status
+├── docs/                          # June 2026 records
 ├── examples/
+├── tests/test_memory_regression.py
 ├── pyproject.toml
-├── README.md
 └── LICENSE
 ```
 
-## Status
+## June 2026 records
 
-Dormant personal log (v0.3.0), trimmed on 2026-10-24 to the path Claude uses. The 2026-10-11 slug, synapse, and home fixes remain.
+These files describe machinery this tree no longer includes. Read them as history.
 
-Contributions and real-world usage reports (especially external/Claude experiences) are very welcome.
+- [30-minute notes, rewritten for this tree](docs/HELIXCORE_IN_30_MINUTES.md)
+- [Getting started](docs/GETTING_STARTED.md)
+- [The one golden path](docs/golden_paths_quick_reference.md)
+- [Stress test, June 2026](docs/ULTIMATE_STRESS_TEST.md)
+- [Readiness summary, 7 June 2026](docs/HelixCore_Public_Readiness_Summary_2026-06-07.md)
+
+`system-overview.html` is a June snapshot of a local machine. It is not the package.
+
+## Authorship
+
+Created and maintained by **MrSilhouette**. The name is locked in LICENSE, `pyproject.toml`, and this file. Commits use a `Signed-off-by: MrSilhouette ...` trailer. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT — see LICENSE.
-
----
-
-*HelixCore — the patterns that make agentic work sustainable.*
-
-*5 weeks of focused dogfooding, now available as a small, importable library.*
+MIT. See [LICENSE](LICENSE).

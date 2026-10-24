@@ -1,146 +1,79 @@
-# HelixCore in 30 Minutes
+# HelixCore in 30 minutes
 
-**Goal**: Take a new external Python developer from zero to applying governed patterns on a real task in about 30 minutes.
+A short walkthrough of the package on `main`. The [README](../README.md) is the reference. June 2026 writeups in this folder describe an older stack.
 
-This is the fastest practical on-ramp. By the end of this guide you will have:
-
-- Installed HelixCore
-- Run a complete governed session
-- Observed live state, phase handoffs, and persisted decisions
-- Applied the patterns to one of your own tasks
-
-## Prerequisites
-
-- Python 3.10 or newer
-- 15–20 minutes of focused time
-- (Strongly recommended) A small personal task or project you are actively working on
-
-## Step 1: Install HelixCore (≈ 2 minutes)
-
-Use the reliable local installation method:
+## 1. Install
 
 ```powershell
-# Clone the repository
 git clone https://github.com/Goliaith/helixcore.git
 cd helixcore
-
-# Install from the local directory (recommended on Windows)
 python -m pip install .
-
-# Verify the installation
-python -c "from helixcore import begin_governed_work, get_status_report, is_standalone_mode; print('HelixCore ready (standalone:', is_standalone_mode(), ')')"
+$env:HELIXCORE_HOME = "C:\tmp\helixcore-demo"
 ```
 
-Alternative options:
+Set the home before Python imports the package.
 
-```bash
-# Editable install (useful while learning)
-pip install -e .
-
-# Optional one-liner (if your environment supports it)
-pip install git+https://github.com/Goliaith/helixcore.git
-```
-
-**Optional**: isolate state for this experiment:
-
-```powershell
-$env:HELIXCORE_HOME = "C:\tmp\helixcore-30min-demo"
-```
-
-## Step 2: Experience the Core Patterns (≈ 5 minutes)
-
-Run this complete, self-contained script:
+## 2. Open a task
 
 ```python
-from helixcore import (
-    begin_governed_work,
-    record_phase_handoff,
-    persist_decision,
-    pulse_agent_health,
-    get_status_report,
-)
+from helixcore import begin_governed_work, list_golden_paths
 
-# 1. Start a governed session — the primary entry point
-result = begin_governed_work(
-    task_slug="30-min-demo",
-    initial_focus="Explore what governed agentic work feels like",
-    mode="light",                 # Start light; try "standard" or "disciplined" later
+print(list_golden_paths())
+begin_governed_work(
+    "demo-notes",
+    "Capture one real decision from today's work.",
+    mode="light",
 )
+```
 
-print("Session started. Current state preview:")
-print(get_status_report(friendly=True))
+That writes `tasks/demo-notes/current.json` with the opening sentence. `mode="light"` skips the extra synapse pass on the turn itself. `persist_decision`, used below, still runs one pass.
 
-# 2. Simulate real work (in practice you would call your LLM here)
-record_phase_handoff(
-    summary="Initial exploration complete",
-    next_focus="Record a decision and inspect full state",
-    task_slug="30-min-demo",
+## 3. Keep a keyword log
+
+```python
+from helixcore import write_semantic_memory, semantic_search
+
+write_semantic_memory(
+    "demo-notes",
+    "Store session notes as JSONL and search them by keyword overlap plus recency.",
 )
+write_semantic_memory(
+    "demo-notes",
+    "A repeated sentence refreshes the old line instead of appending a copy.",
+)
+for hit in semantic_search("demo-notes", "keyword overlap", limit=2):
+    print(round(hit["score"], 3), hit["content"])
+```
+
+Search looks at this slug only. There is no embedding index.
+
+## 4. Save the latest decision
+
+```python
+from helixcore import persist_decision, read_local_memory
 
 persist_decision(
-    task_slug="30-min-demo",
-    decision="HelixCore makes the disciplined thing the easy thing and keeps it visible.",
-    category="impression",
+    "demo-notes",
+    "Use the keyword log for history and the category file for the latest decision.",
+    category="decisions",
 )
+print(read_local_memory("demo-notes", "decisions"))
+```
 
-print("\nHealth pulse:")
+The category file keeps the latest text. The keyword line from step 3 is a separate call to `write_semantic_memory`.
+
+## 5. Read it back
+
+```python
+from helixcore import disciplined_recall, get_status_report, pulse_agent_health
+
+print(disciplined_recall("demo-notes"))
+print(get_status_report(friendly=True))
 print(pulse_agent_health())
 ```
 
-**What to look for**:
+`disciplined_recall` reads `current.json`, `decisions.json`, and `phases.json`. The pulse reports zero active sessions. `record_phase_handoff` updates a session file only when one already exists, and this walkthrough does not create one.
 
-- An explicit session start with context and safety registration
-- A phase handoff recorded as durable memory
-- Friendly, readable English output from `get_status_report`
-- The system still knows about your task after the script exits (inspect the state directory)
+## 6. Point the next project at its own folder
 
-## Step 3: Use It on Real Work (≈ 15–20 minutes)
-
-Choose a real task you are working on today and wrap its key phases:
-
-```python
-result = begin_governed_work(
-    task_slug="my-real-task-2026-06",
-    initial_focus="The concrete goal you are pursuing right now",
-    mode="standard",
-)
-
-# ... your normal work and LLM calls go here ...
-
-record_phase_handoff(
-    summary="Important milestone reached",
-    next_focus="Next concrete step or verification",
-    task_slug="my-real-task-2026-06",
-)
-
-persist_decision(
-    task_slug="my-real-task-2026-06",
-    decision="The reasoning behind a significant choice you just made",
-    category="design",
-)
-
-print(get_status_report(friendly=True))
-```
-
-After running, explore the created state. It lives under your `HELIXCORE_HOME` (or `~/.grok/state/tasks/...` by default). Look for the task directory, handoff records, and decision logs.
-
-## Next Steps
-
-- Read the full [Public Readiness Summary](HelixCore_Public_Readiness_Summary_2026-06-07.md) (same docs folder)
-- Browse the [Golden Paths Quick Reference](golden_paths_quick_reference.md) or run:
-  ```python
-  from helixcore import list_golden_paths
-  print(list_golden_paths())
-  ```
-- Try `examples/simple_claude_dogfood.py`
-- Review the main [README.md](../README.md) for the complete feature list and performance data
-
-## Troubleshooting
-
-- **ImportError**: Ensure you ran `pip install .` (or `-e .`) from the repository root.
-- **State does not persist**: Set `HELIXCORE_HOME` explicitly or check the path printed by `get_status_report()`.
-- **Need more structure**: Switch to `mode="disciplined"` and call `record_phase_handoff` at every natural boundary.
-
----
-
-This guide is intentionally short. The real value comes from consistent use of these patterns on actual work. Clear task slugs, regular phase handoffs, and recorded decisions compound quickly.
+Use another `HELIXCORE_HOME` for the next project. Task notes, the keyword log, and the synapse file stay inside that folder.

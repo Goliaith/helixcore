@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Minimal example showing HelixCore + any LLM (Claude, GPT, local model, etc.).
+Minimal example: start a task, record a handoff call, save a decision, print status.
 
-You bring the model client. HelixCore brings the governance, memory, and safety.
+You bring the model client. HelixCore writes the task note and the local journal.
+Set HELIXCORE_HOME before running this if you want an isolated folder.
 
 Run this after `pip install -e .` from the repo root (or after cloning).
 """
